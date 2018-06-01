@@ -9,4 +9,6 @@ Furthermore, FeatureCoPP merges such modularized structures into an duplicate of
 
 ## Dependecies
 
+## Regenerating Acceptors
+
 ## Limitations

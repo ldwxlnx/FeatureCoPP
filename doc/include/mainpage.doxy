@@ -1,0 +1,21 @@
+/*! \mainpage project-manual
+ * \author K. Ludwig
+ * 
+ * \section intro Introduction
+ * introduce this project to the audience
+ * \section install Installation
+ * This section covers the necessary prerequisites and steps to make project working.
+ * \subsection prereq Prerequisites
+ * Before you begin you have to...
+ * \subsection deploy Deployment
+ * To get started first unpack...
+ * \section usage Usage
+ * Explain usage here
+ * \include usage.java
+ * 
+ * \section troubleshoot Troubleshooting
+ * This section features known problems detected during the development-process of project. If you
+ * detect further issues not documented here, feel free to post a bug-report to:
+ * ADD-URL-HERE
+ *
+ */
