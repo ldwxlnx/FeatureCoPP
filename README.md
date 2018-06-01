@@ -97,16 +97,20 @@ You can invoke FeatureCoPP on your terminal emulator directly as explained withi
 
 ### Physical Separation
 `java -jar FeatureCoPP.jar --split | --asplit <inputdir> [<regex>]`
+
 `--split` - Performs physical separation without `PSPOT` calculation (short runtime).
+
 `--asplit` - Performs physical separation with `PSPOT` calculation (long runtime).
 
 `<inputdir>` - C source project
+
 `<regex>` - Java.tm compliant regular expression matching the `constExpr` of a conditional directive (default: ".*")
 
 If whitespaces occur in path names or regular expression, you should enclose them in double quotes "".
 
 ### Re-Integration
 `java -jar FeatureCoPP.jar --merge <inputdir>_split` 
+
 Merges given directory in conjunction with original project (`<inputdir>` residing next to `<inputdir>_split`) into a new
 project `<inputdir>_merged`. 
 
@@ -117,6 +121,10 @@ Analogously to [Physical Separation](#physical-separation) but without actually 
 the XML journal (cf. [Output](#reporting)) with and without syntactical analysis.
 
 ## Dependencies
+
+- ant
+- jflex/jcup
+- choco
 
 ## Reporting
 
