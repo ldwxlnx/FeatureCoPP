@@ -26,7 +26,28 @@ FeatureCoPP can revert the physical separation based on a given already split (`
 project. FeatureCoPP assumes original project location next to `<inputdir>_split` and deduces its name automatically.
 For instance, given `/tmp/foo_split` as input, FeatureCoPP assumes the original project as `/tmp/foo`.
 Now all changes within the feature modules are file-wise superimposed (i.e., overwritten) onto their sibling files within the
-original project. The output is written to `<inputdir>_merge`. If no changes have been made within the feature modules, `<inputdir>` and `<input>_merge` are structurally and textually identical (see [Go to limitations](#limitations)).
+original project. The output is written to `<inputdir>_merge`. If no changes have been made within the feature modules, `<inputdir>` and `<input>_merge` are structurally and textually identical ([Refer to limitations](#limitations)).
+
+### Calculating Physical Separation Potential (a.k.a. the `a`-modes)
+
+FeatureCoPP can also perform a syntactical analysis of controlled code within requested `CD`s and ranks the found syntactical
+structures regarding bottom-up program comprehension. The calculated values are a heuristic to assist
+developers in their decision, which features are suitable for physical separation. This heuristic - namely `PSPOT` (Physical Separation Potential) - is a additive compound value consisting of two sub-heuristics:
+1. `ER` (Encapsulation Ratio)
+	Represents the ratio of declared and used symbols to all used symbols within a particular `CD`. Hence, `ER` is rational 
+	within the interval [0,1].
+2. `CS` (Comprehension Support).
+	Ranks found syntactic structures against a recommendation vector by calculating the respective cosine similarity.
+	The recommendation vector looks as follows:
+	structure | rank | interpretation
+	---------------------------------
+	funcdef | 6 | modular unit, good encapsulation, probably easy to maintain in isolation
+	struct-/uniondecl | 5 | compound type, possibly high declarative impact
+	funcdecl | 4 | forward declaration explaining signatures, probably useful maintaining controlled code fragments over function level
+	vardecl | 3 | explaining type and scope of symbols in physically separated roles
+	stmts | 2 | functional volume of controlled code fragment
+	comment | 1 | additional helpers, useful as beacons during maintenance
+3. `PSPOT = ER + CS`
 
 ## Getting started
 
