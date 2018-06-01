@@ -10,22 +10,16 @@
 	<classpathentry kind="lib" path="lib/jflex-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/java-cup-11a-runtime.jar"/>
 	<classpathentry kind="lib" path="lib/java-cup-11a.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/com.ibm.icu_50.1.1.v201304230130.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.cdt.core_5.6.0.201402142303.jar" sourcepath="/JCParser/lib/org.eclipse.cdt-CDT_8_3_0">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/JCParser/doc/Cdt-jdoc.zip!/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.core.jobs_3.5.300.v20130429-1813.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.core.resources_3.8.101.v20130717-0806.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.core.runtime_3.9.100.v20131218-1515.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.equinox.registry_3.5.301.v20130717-1549.jar"/>
-	<classpathentry kind="lib" path="/JCParser/lib/org.eclipse.osgi_3.9.1.v20140110-1610.jar"/>
-	<classpathentry kind="lib" path="/JCParser/release/JCParser.jar" sourcepath="/JCParser/src"/>
 	<classpathentry kind="lib" path="lib/choco-solver-4.0.4-with-dependencies.jar" sourcepath="lib/choco-solver-4.0.4-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.cdt.core_5.6.0.201402142303.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.core.jobs_3.5.300.v20130429-1813.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.core.resources_3.8.101.v20130717-0806.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.core.runtime_3.9.100.v20131218-1515.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.equinox.registry_3.5.301.v20130717-1549.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.osgi_3.9.1.v20140110-1610.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
