@@ -98,9 +98,9 @@ You can invoke FeatureCoPP on your terminal emulator directly as explained withi
 ### Physical Separation
 `java -jar FeatureCoPP.jar --split | --asplit <inputdir> [<regex>]`
 
-`--split` - Performs physical separation without `PSPOT` calculation (short runtime).
+`--split` - Performs physical separation without `PSPOT` calculation.
 
-`--asplit` - Performs physical separation with `PSPOT` calculation (long runtime).
+`--asplit` - Performs physical separation with `PSPOT` calculation.
 
 `<inputdir>` - C source project
 
@@ -118,7 +118,7 @@ project `<inputdir>_merged`.
 `java -jar FeatureCoPP.jar --report | --areport <inputdir> [<regex>]`
 
 Analogously to [Physical Separation](#physical-separation) but without actually performing extraction. This mode generates only
-the XML journal (cf. [Output](#reporting)) with and without syntactical analysis.
+the XML journal (cf. [Reporting](#reporting)) with and without syntactical analysis.
 
 ## Dependencies
 
