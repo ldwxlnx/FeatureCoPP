@@ -61,9 +61,35 @@ The above mentioned analyses and calculation have a high impact on FeatureCoPP's
 
 ## Getting started
 
+FeatureCoPP is brought to you as binary or as Eclipse.tm source project. For a "hit and run" experience we suggest to prefer the
+binaries over sources. 
+
 ### Binary
 
+To work with the binaries proceed as follows:
+
+1. Download the current stable build [here](https://github.com/ldwxlnx/FeatureCoPP/releases). 
+2. Extract the respective archive to your preferred location.
+3. Open your favorite terminal emulator and `cd` into the extracted directory.
+4. Issue a chmod 700 on the invocation shell scripts (`*.sh`) on *nix environments having a `bash` (Please refer to [Limitations](#limitations) for Cygwin usage!).
+5. Refer to [Usage](#usage) for explanations regarding invocation of FeatureCoPP.
+
 ### Sources
+
+FeatureCoPP is brought to you as Eclipse.tm project. After a successful `git clone` an automatic project import is suggested by
+the IDE. Please refer to your IDE's documentation, if you use something different than Eclipse.tm.
+Project's structure is pretty much standard:
+1. `src` - clearly the sources (package-wise)
+2. `doc` - doxygen configuration (prepared for generation, requires doxygen and graphviz install)
+3. `lib` - additional library dependencies
+4. `release` - generate your own build here using Apache Ant.tm with provided `build.xml`
+5. `specs` - JFlex and JCup lexer and parser specification files
+6. `test_dos` - Test input having `\r\n` line terminators
+7. `test_unix` - Test input having `\n` line terminators
+8. `conf.d` - configuration directory (currently only `blacklist.conf` for excluding files, which cannot be processed by FeatureCoPP, cf. [Limitations](#limitations))
+9. `blacklist_examples` - example files which are refused by FeatureCoPP
+
+We strongly recommend to setup different run configurations for each mode and test project (cf. [Usage](#usage)).
 
 ## Usage
 
@@ -71,4 +97,9 @@ The above mentioned analyses and calculation have a high impact on FeatureCoPP's
 
 ## Regenerating Acceptors
 
+- how refresh all scanners/parsers 
+
 ## Limitations
+- lexical ambiguities
+- encoding on hybrid platforms (cygwin)
+- cygwin path trouble
