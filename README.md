@@ -61,7 +61,7 @@ The above mentioned analyses and calculation have a high impact on FeatureCoPP's
 
 ## Getting started
 
-FeatureCoPP is brought to you as binary or as Eclipse.tm source project. For a "hit and run" experience we suggest to prefer the
+FeatureCoPP is brought to you as binary or as Eclipse&#8482; source project. For a "hit and run" experience we suggest to prefer the
 binaries over sources. 
 
 ### Binary
@@ -76,13 +76,13 @@ To work with the binaries proceed as follows:
 
 ### Sources
 
-FeatureCoPP is brought to you as Eclipse.tm project. After a successful `git clone` an automatic project import is suggested by
-the IDE. Please refer to your IDE's documentation, if you use something different than Eclipse.tm.
+FeatureCoPP is brought to you as Eclipse&#8482; project. After a successful `git clone` an automatic project import is suggested by
+the IDE. Please refer to your IDE's documentation, if you use something different than Eclipse&#8482;.
 Project's structure is pretty much standard:
 1. `src` - clearly the sources (package-wise)
 2. `doc` - doxygen configuration (prepared for generation, requires doxygen and graphviz install)
 3. `lib` - additional library dependencies
-4. `release` - generate your own build here using Apache Ant.tm with provided `build.xml`
+4. `release` - generate your own build here using Apache Ant.&#8482; with provided `build.xml`
 5. `specs` - JFlex and JCup lexer and parser specification files
 6. `test_dos` - Test input having `\r\n` line terminators
 7. `test_unix` - Test input having `\n` line terminators
@@ -104,7 +104,7 @@ You can invoke FeatureCoPP on your terminal emulator directly as explained withi
 
 `<inputdir>` - C source project
 
-`<regex>` - Java.tm compliant regular expression matching the `constExpr` of a conditional directive (default: ".*")
+`<regex>` - Java&#8482; compliant regular expression matching the `constExpr` of a conditional directive (default: ".*")
 
 If whitespaces occur in path names or regular expression, you should enclose them in double quotes "".
 
