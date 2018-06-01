@@ -39,14 +39,14 @@ developers in their decision, which features are suitable for physical separatio
 2. `CS` (Comprehension Support).
 	Ranks found syntactic structures against a recommendation vector by calculating the respective cosine similarity.
 	The recommendation vector looks as follows:
-	structure | rank | interpretation
-	----------|------|---------------
-	funcdef | 6 | modular unit, good encapsulation, probably easy to maintain in isolation
-	struct-/uniondecl | 5 | compound type, possibly high declarative impact
-	funcdecl | 4 | forward declaration explaining signatures, probably useful maintaining controlled code fragments over function level
-	vardecl | 3 | explaining type and scope of symbols in physically separated roles
-	stmts | 2 | functional volume of controlled code fragment
-	comment | 1 | additional helpers, useful as beacons during maintenance
+	| structure | rank | interpretation |
+	| --- | --- | --- |
+	| funcdef | 6 | modular unit, good encapsulation, probably easy to maintain in isolation |
+	| struct-/uniondecl | 5 | compound type, possibly high declarative impact | 
+	| funcdecl | 4 | forward declaration explaining signatures, probably useful maintaining controlled code fragments over function level | 
+	| vardecl | 3 | explaining type and scope of symbols in physically separated roles |
+	| stmts | 2 | functional volume of controlled code fragment | 
+	| comment | 1 | additional helpers, useful as beacons during maintenance | 
 3. `PSPOT = ER + CS`
 
 ## Getting started
