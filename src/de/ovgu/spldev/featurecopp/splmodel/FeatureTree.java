@@ -15,7 +15,7 @@ import org.chocosolver.solver.variables.RealVar;
 import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.MathUtils;
 
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Node;
+//import com.sun.org.apache.xalan.internal.xsltc.runtime.Node;
 
 /**
  * Bottom-up built feature tree (AST) created during parsing of conditional

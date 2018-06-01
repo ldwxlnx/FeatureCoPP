@@ -55,10 +55,10 @@ public class Configuration {
 					BLACKLIST.put(blacklistFile, line);
 				}
 				// to subtle to review in logs -- so exit, to assist and discipline user
-				else {
-					br.close();
-					throw new Exception("File " + blacklistFile + " does not exist! Refused blacklisting...");
-				}
+//				else {
+//					br.close();
+//					throw new Exception("File " + blacklistFile + " does not exist! Refused blacklisting...");
+//				}
 			}
 		}
 		br.close();

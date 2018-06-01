@@ -10,6 +10,8 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 import de.ovgu.spldev.featurecopp.config.Configuration;
+import de.ovgu.spldev.featurecopp.lang.CDTParser;
+import de.ovgu.spldev.featurecopp.lang.CParser;
 import de.ovgu.spldev.featurecopp.lang.cpp.CPPAnalyzer.TYPE;
 import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.splmodel.ElifTree;
@@ -18,9 +20,6 @@ import de.ovgu.spldev.featurecopp.splmodel.FeatureModule;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureModule.FeatureOccurrence;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTable;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTree;
-import de.ovgu.spldev.featurecopp.splmodel.IfTree;
-import de.ovgu.spldev.lang.CDTParser;
-import de.ovgu.spldev.lang.CParser;
 
 public class FeatureScopeManager {
 	public static void initASTStrm(final String astLogfile)

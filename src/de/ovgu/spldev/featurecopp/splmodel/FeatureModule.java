@@ -21,8 +21,8 @@ import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.markup.MarkupLexer;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTree.LogAnd;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Node;
-import de.ovgu.spldev.lang.CDTParser;
-import de.ovgu.spldev.lang.CDTParser.Stats;
+import de.ovgu.spldev.featurecopp.lang.CDTParser;
+import de.ovgu.spldev.featurecopp.lang.CDTParser.Stats;
 
 /**
  * Aggregates feature expression information in conjunction with feature
@@ -43,19 +43,6 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		csp_logger.setFailStrms(csp_strm);
 	}
 
-	// /**
-	// * FeatureModules build a total order based on their (natural) unique id.
-	// */
-	// @Override
-	// public int compareTo(FeatureModule fm) {
-	// if (uid < fm.uid) {
-	// return -1;
-	// } else if (uid > fm.uid) {
-	// return 1;
-	// } else {
-	// return 0;
-	// }
-	// }
 	/**
 	 * FeatureModules build a total order based on their (natural) amount of
 	 * occurrences in an descending manner.
