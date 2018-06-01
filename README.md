@@ -40,7 +40,7 @@ developers in their decision, which features are suitable for physical separatio
 	Ranks found syntactic structures against a recommendation vector by calculating the respective cosine similarity.
 	The recommendation vector looks as follows:
 	structure | rank | interpretation
-	---------------------------------
+	----------|------|---------------
 	funcdef | 6 | modular unit, good encapsulation, probably easy to maintain in isolation
 	struct-/uniondecl | 5 | compound type, possibly high declarative impact
 	funcdecl | 4 | forward declaration explaining signatures, probably useful maintaining controlled code fragments over function level
