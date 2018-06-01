@@ -1,0 +1,198 @@
+/* ----------------------Preliminary Declarations Section--------------------*/
+   
+/* Import the class java_cup.runtime.*  */
+import java_cup.runtime.*;
+import de.ovgu.spldev.featurecopp.*;
+import de.ovgu.spldev.featurecopp.markup.MarkupLexer.Markup;
+
+init with {:
+
+:};
+
+action code {:	
+	// init first
+:};
+
+scan with {:
+	// just to obtain the line/column-occurences
+	Symbol currRead = getScanner().next_token();
+	line = currRead.left + 1;
+	column = currRead.right + 1;
+	return currRead;
+:};
+
+/* Parser code to change the way the parser reports errors (include
+   line and column number of the error). */
+parser code {:
+	public static class ParserException extends Exception {
+		public ParserException(String msg) {
+			super(msg);
+		}
+	}
+	public int getLine() {
+		return line;
+	}
+	public int getColumn() {
+		return column;
+	}
+    /* Change the method report_error so it will display the line and
+       column of where the error occurred in the input as well as the
+       reason for the error which is passed into the method in the
+       String 'message'. */
+    public void report_error(String message, Object info) {
+        /* Create a StringBuffer called 'm' with the string 'Error' in it. */
+        m = new StringBuffer();
+   
+        /* Check if the information passed to the method is the same
+           type as the type java_cup.runtime.Symbol. */
+        if (info instanceof java_cup.runtime.Symbol) {
+            /* Declare a java_cup.runtime.Symbol object 's' with the
+               information in the object info that is being typecasted
+               as a java_cup.runtime.Symbol object. */
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+   
+            /* Check if the line number in the input is greater or
+               equal to zero. */
+            if (s.left >= 0) {                
+                /* Add to the end of the StringBuffer error message
+                   the line number of the error in the input. */
+                m.append(" in line "+ s.left);   
+                /* Check if the column number in the input is greater
+                   or equal to zero. */
+                if (s.right >= 0)                    
+                    /* Add to the end of the StringBuffer error message
+                       the column number of the error in the input. */
+                    m.append(", column "+ s.right);
+            }
+        }
+   
+        /* Add to the end of the StringBuffer error message created in
+           this method the message that was passed into this method. */
+        m.append(message);       
+        /* Print the contents of the StringBuffer 'm', which contains
+           an error message, out on a line. */
+        //System.err.println(m);
+    }
+   
+    /* Change the method report_fatal_error so when it reports a fatal
+       error it will display the line and column number of where the
+       fatal error occurred in the input as well as the reason for the
+       fatal error which is passed into the method in the object
+       'message' and then exit.*/
+    public void report_fatal_error(String message, Object info) throws Exception {
+        report_error(message, info);        
+        throw new ParserException("Syntax error: " + m.toString());
+    }
+    	// TODO 2014-07-27 off-by-one(+1) at e.g. Var-decls, otherwise correct
+	// current line where lexed symbol occured
+	private int line;
+	// current column where lexed symbol occured
+	private int column;
+	private StringBuffer m;
+:};
+   
+
+   
+/* ------------Declaration of Terminals and Non Terminals Section----------- */
+/* Terminals (tokens returned by the scanner).  
+   Terminals that have no value are listed first and then terminals
+   that do have an value, in this case an integer value, are listed on
+   the next line down.
+ */
+terminal String
+	T_COMM_BEGIN,
+	T_COMM_END,
+	T_AT,
+	T_DOLLAR,
+	T_INLINE,
+	T_OCC_ID,
+	T_ENCL_OCC_ID,
+	T_SRC,
+	T_DST,
+	T_DIRECTIVE,
+	T_ASSIGN,
+	T_VALUE
+;
+
+non terminal MarkupLexer.Markup
+	n_markup,
+	n_markup_base,
+	n_markup_ref,
+	n_markup_block
+;
+non terminal String
+	n_src,
+	n_dst,
+	n_directive		
+;
+non terminal Long
+	n_occ,
+	n_encl_occ
+;
+/* -------------Precedence and Associatively of Terminals Section----------- */
+   
+/* ----------------------------Grammar Section-------------------- */
+/* productions    */
+
+n_markup ::= T_COMM_BEGIN n_markup_base:m T_COMM_END
+	{:
+		RESULT = m;
+	:}
+;
+n_markup_base ::= n_markup_ref:m
+	{:
+		RESULT = m;
+	:}
+	| n_markup_block:m
+	{:
+		RESULT = m;
+	:}
+;
+n_markup_ref ::= T_DOLLAR:id T_INLINE n_occ:oid n_encl_occ:eoid n_dst:dstfile
+	{:
+		RESULT = new MarkupLexer.Markup(oid, eoid, dstfile);
+	:}
+;
+
+n_markup_block ::= T_AT:id T_INLINE n_occ:oid n_encl_occ:eoid n_src:srcfile n_directive:directive
+	{:
+		RESULT = new MarkupLexer.MarkupBlock(oid, eoid, srcfile, directive);
+	:}
+;
+n_occ ::= T_OCC_ID T_ASSIGN T_VALUE:val
+	{:
+		long oid = -1;
+		try {
+			oid = Long.parseLong(val);
+		} catch(NumberFormatException nfe) {
+			parser.report_fatal_error("occ_id is not a number [" + nfe.getMessage() + "]", null);	
+		}
+		RESULT = oid;
+	:}
+;
+n_encl_occ ::= T_ENCL_OCC_ID T_ASSIGN T_VALUE:val
+	{:
+		long eoid = -1;
+		try {
+			eoid = Long.parseLong(val);
+		} catch(NumberFormatException nfe) {
+			parser.report_fatal_error("encl_occ_id is not a number [" + nfe.getMessage() + "]", null);
+		}
+		RESULT = eoid;
+	:}
+;
+n_src ::= T_SRC T_ASSIGN T_VALUE:val
+	{:
+		RESULT = val;
+	:}
+;
+n_dst ::= T_DST T_ASSIGN T_VALUE:val
+	{:
+		RESULT = val;
+	:}
+;
+n_directive ::= T_DIRECTIVE T_ASSIGN T_VALUE:val
+	{:
+		RESULT = val;
+	:}
+;

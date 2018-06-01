@@ -1,0 +1,352 @@
+/* ----------------------Preliminary Declarations Section--------------------*/
+   
+/* Import the class java_cup.runtime.*  */
+import java_cup.runtime.*;
+import de.ovgu.spldev.featurecopp.lang.*;
+
+init with {:
+
+:};
+
+action code {:	
+	// init first
+:};
+
+scan with {:
+	// just to obtain the line/column-occurences
+	Symbol currRead = getScanner().next_token();
+	line = currRead.left + 1;
+	column = currRead.right + 1;
+	return currRead;
+:};
+
+/* Parser code to change the way the parser reports errors (include
+   line and column number of the error). */
+parser code {:
+	static class ParserException extends Exception {
+		public ParserException(String msg) {
+			super(msg);
+		}
+	}
+	public int getLine() {
+		return line;
+	}
+	public int getColumn() {
+		return column;
+	}
+    /* Change the method report_error so it will display the line and
+       column of where the error occurred in the input as well as the
+       reason for the error which is passed into the method in the
+       String 'message'. */
+    public void report_error(String message, Object info) {
+        /* Create a StringBuffer called 'm' with the string 'Error' in it. */
+        m = new StringBuffer();
+   
+        /* Check if the information passed to the method is the same
+           type as the type java_cup.runtime.Symbol. */
+        if (info instanceof java_cup.runtime.Symbol) {
+            /* Declare a java_cup.runtime.Symbol object 's' with the
+               information in the object info that is being typecasted
+               as a java_cup.runtime.Symbol object. */
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+   
+            /* Check if the line number in the input is greater or
+               equal to zero. */
+            if (s.left >= 0) {                
+                /* Add to the end of the StringBuffer error message
+                   the line number of the error in the input. */
+                m.append(" in line "+(s.left+1));   
+                /* Check if the column number in the input is greater
+                   or equal to zero. */
+                if (s.right >= 0)                    
+                    /* Add to the end of the StringBuffer error message
+                       the column number of the error in the input. */
+                    m.append(", column "+(s.right+1));
+            }
+        }
+   
+        /* Add to the end of the StringBuffer error message created in
+           this method the message that was passed into this method. */
+        //m.append(message);       
+        /* Print the contents of the StringBuffer 'm', which contains
+           an error message, out on a line. */
+        //System.err.println(m);
+    }
+   
+    /* Change the method report_fatal_error so when it reports a fatal
+       error it will display the line and column number of where the
+       fatal error occurred in the input as well as the reason for the
+       fatal error which is passed into the method in the object
+       'message' and then exit.*/
+    public void report_fatal_error(String message, Object info) throws Exception {
+        report_error(message, info);        
+        throw new ParserException("Syntax error: " + m.toString());
+    }
+    	// TODO 2014-07-27 off-by-one(+1) at e.g. Var-decls, otherwise correct
+	// current line where lexed symbol occured
+	private int line;
+	// current column where lexed symbol occured
+	private int column;
+	private StringBuffer m;
+:};
+   
+
+   
+/* ------------Declaration of Terminals and Non Terminals Section----------- */
+/* Terminals (tokens returned by the scanner).  
+   Terminals that have no value are listed first and then terminals
+   that do have an value, in this case an integer value, are listed on
+   the next line down.
+ */
+terminal String
+	T_IF,			// if
+	T_IFDEF,		// ifdef
+	T_IFNDEF,		// ifndef
+	T_ELIF,			// elif
+	T_DEFINED,		// defined
+	T_CHAR_LIT,		// any ascii character enclosed within simple ticks e.g 'x', '\t'
+	T_LPAR,			// (
+	T_RPAR,			// )
+	T_IDENTIFIER,	// name by convention
+	T_SHARP, 		// #
+	T_LOG_NEG,		// !
+	T_PLUS,			// +
+	T_MINUS,		// -
+	T_TIMES,		// *
+	T_DIVIDE,		// /
+	T_MOD,			// %
+	T_COMMA,		// ,
+	T_PIPE,			// |
+	T_TILD,			// ^
+	T_AMP,			// &
+	T_LSHIFT,		// <<
+	T_RSHIFT,		// >>
+	T_LT,			// <
+	T_GT,			// >
+	T_LE,			// <=
+	T_GE,			// >=
+	T_EQUIV,		// ==
+	T_ANTIV,		// !=
+	T_LOG_OR,		// ||
+	T_LOG_AND		// &&
+;
+
+terminal Integer
+	T_DEC_NAT_LIT	// any decimal integer
+;
+
+non terminal String
+	n_conditional,
+	n_macro,
+	n_macro_arglist,
+	n_macro_args,
+	n_conditional_clause,
+	n_if,
+	n_ifdef,
+	n_ifndef,
+	n_expr,
+	n_log_or_term,
+	n_log_and_term,
+	n_bitw_or_term,
+	n_bitw_xor_term,
+	n_bitw_and_term,
+	n_rel_id_term,
+	n_bitw_shift_term,
+	n_arith_term,	
+	n_term,
+	n_factor,
+	n_primary,
+	n_literal
+;	
+non terminal Integer
+	n_sign		// depending on underlying symbol expanded to either Integer(-1 or 1)
+;	
+/* -------------Precedence and Associatively of Terminals Section----------- */
+/* Precedences */
+// In conjunction with our descent-driven grammar (which automatically organizes precedences)
+// an activation of the following, results in errors!
+//precedence left T_PLUS, T_MINUS;
+//precedence left T_TIMES, T_DIVIDE, T_MOD;
+   
+/* ----------------------------Grammar Section-------------------- */
+/* Produktionen    */
+
+n_conditional ::= T_SHARP:sh n_conditional_clause:condclause
+	{:
+		RESULT = sh + condclause;
+	:}
+;
+n_conditional_clause ::= n_if:_if
+	{:
+		RESULT = _if;
+	:}
+	|  n_ifdef:ifdef
+	{:
+		RESULT = ifdef;
+	:}
+	| n_ifndef:ifndef
+	{:
+		RESULT = ifndef;
+	:}
+;
+n_if ::= T_IF:_if n_expr:expr // TODO Expr
+	{: 
+		RESULT = _if + "[" + expr+ "]";
+	:}
+;	
+n_ifdef	::= T_IFDEF:ifdef n_macro:macro
+	{: 
+		RESULT = ifdef + "[" + macro + "]";
+	:}
+;
+n_ifndef ::= T_IFNDEF:ifndef n_macro:macro
+	{: 
+		RESULT = ifndef + "[" + macro + "]";
+	:}
+;
+/* From: https://gcc.gnu.org/onlinedocs/cpp/If.html#If corresponding to #if 'expr'
+   expression is a C expression of integer type, subject to stringent restrictions. It may contain
+    1.) Integer constants.
+    2.) Character constants, which are interpreted as they would be in normal code.
+    3.) Arithmetic operators for addition, subtraction, multiplication, division, bitwise operations, shifts, comparisons,
+      and logical operations (&& and ||). The latter two obey the usual short-circuiting rules of standard C.
+    4.) Macros. All macros in the expression are expanded before actual computation of the expression’s value begins.
+    5.) Uses of the defined operator, which lets you check whether macros are defined in the middle of an ‘#if’.
+    6.) Identifiers that are not macros, which are all considered to be the number zero. This allows you to write
+      #if MACRO instead of #ifdef MACRO, if you know that MACRO, when defined, will always have a nonzero value.
+      Function-like macros used without their function call parentheses are also treated as zero. 
+ */
+// TODO arith|log|bin|rel|unary|macro
+// we could optionally calculate to detect 0-expanding expressions rendering a feature dead
+// but this additionally forces us to maintain a symbol table to expand values of defined macros
+n_expr ::= n_expr:e T_LOG_OR:op n_log_or_term:t // X || Y
+	{: RESULT = e + op + t; :}
+	| n_log_or_term:t
+	{: RESULT = t; :}
+;
+n_log_or_term ::= n_log_or_term:t1 T_LOG_AND:op n_log_and_term:t2		// X && Y
+	{: RESULT = t1 + op + t2; :}
+	| n_log_and_term:t
+	{: RESULT = t; :}
+;
+n_log_and_term ::= n_log_and_term:t1 T_PIPE:op n_bitw_or_term:t2		// X | Y
+	{: RESULT = t1 + op + t2; :} 
+	| n_bitw_or_term:t
+	{: RESULT = t; :}
+;
+n_bitw_or_term ::= n_bitw_or_term:t1 T_TILD:op n_bitw_xor_term:t2	    // X ^ Y
+	{: RESULT = t1 + op + t2; :} 
+	| n_bitw_xor_term:t
+	{: RESULT = t; :}
+;
+n_bitw_xor_term ::= n_bitw_xor_term:t1 T_AMP:op n_bitw_and_term:t2		// X & Y
+	{: RESULT = t1 + op + t2; :} 
+	| n_bitw_and_term:t
+	{: RESULT = t; :}
+;
+n_bitw_and_term ::= n_bitw_and_term:t1 T_EQUIV:op n_rel_id_term:t2		// X == Y
+	{: RESULT = t1 + op + t2; :}
+	| n_bitw_and_term:t1 T_ANTIV:op n_rel_id_term:t2					// X != Y
+	{: RESULT = t1 + op + t2; :}
+	| n_rel_id_term:t
+	{: RESULT = t; :}
+;
+n_rel_id_term ::= n_rel_id_term:t1 T_LT:op n_bitw_shift_term:t2			// X < Y
+	{: RESULT = t1 + op + t2; :}
+	|  n_rel_id_term:t1 T_GT:op n_bitw_shift_term:t2					// X > Y
+	{: RESULT = t1 + op + t2; :}
+	|  n_rel_id_term:t1 T_LE:op n_bitw_shift_term:t2					// X <= Y
+	{: RESULT = t1 + op + t2; :}	
+	| n_rel_id_term:t1 T_GE:op n_bitw_shift_term:t2					// X >= Y
+	{: RESULT = t1 + op + t2; :}
+	| n_bitw_shift_term:t
+	{: RESULT = t; :}
+;
+n_bitw_shift_term ::= n_bitw_shift_term:t1 T_LSHIFT:op n_arith_term:t2		// X << Y
+	{: RESULT = t1 + op + t2; :}
+	| n_bitw_shift_term:t1 T_RSHIFT:op n_arith_term:t2						// X >> Y
+	{: RESULT = t1 + op + t2; :}
+	| n_arith_term:t
+	{: RESULT = t; :}
+;	
+n_arith_term ::= n_arith_term:e T_PLUS:op  n_term:t						// X + Y 
+	{: RESULT = e + op + t; :}
+	| n_arith_term:e T_MINUS:op  n_term:t  								// X - Y
+	{: RESULT = e + op + t; :}	
+//	| n_expr:e n_log_or:op  n_term:t 	// X || Y
+//	{: RESULT = e + op + t; :}
+//	| n_expr:e T_PIPE:op  n_term:t 	// X | Y
+//	{: RESULT = e + op + t; :}
+	| n_term:t								// traversal
+	{: RESULT = t; :}
+;
+n_term	::= n_term:t T_TIMES:op n_factor:f 	// X * Y
+	{: RESULT = t + op + f; :}
+	| n_term:t T_DIVIDE:op n_factor:f		// X / Y
+	{: RESULT = t + op + f; :}
+	| n_term:t T_MOD:op n_factor:f			// X % Y
+	{: RESULT = t + op + f; :}
+//	| n_term:t n_log_and:op n_factor:f		// X && Y
+//	{: RESULT = t + op + f; :}
+//	| n_term:t T_AMP:op n_factor:f			// X & Y
+//	{: RESULT = t + op + f; :}
+	| n_factor:f							// traversal
+	{: RESULT = f; :}
+;
+n_factor ::= n_primary:p
+	{: RESULT = p; :}
+	| T_LPAR:lpar n_expr:e T_RPAR:rpar
+	{: RESULT = lpar + e + rpar; :}
+;
+n_primary ::= n_literal:l
+	{: RESULT = l; :}
+	| T_IDENTIFIER:id
+	{: RESULT = id; :}
+	// add further here
+;
+n_literal ::= n_sign:sign T_DEC_NAT_LIT:lit
+	{: RESULT = Integer.toString(sign * lit); :}
+	| T_CHAR_LIT:lit
+	{: RESULT = lit; :}
+;
+n_macro	::= T_IDENTIFIER:id // object macro
+	{: RESULT = id; :}
+	| T_IDENTIFIER:id T_LPAR:lpar n_macro_arglist:arglist T_RPAR:rpar // function macro (usually expanded to 0, so basically a dead feature)
+	{: RESULT = id + lpar + arglist + rpar; :}
+;
+n_macro_arglist ::= n_macro_args:args
+	{: RESULT = args; :}
+	| /* empty */
+;
+n_macro_args ::= n_expr:expr T_COMMA:c n_macro_args:args
+	{: RESULT = expr + c + args; :}
+	| n_expr:expr
+	{: RESULT = expr; :}
+;	
+n_sign ::= T_PLUS:one
+	{: RESULT = 1; :}
+	| T_MINUS:minusone
+	{: RESULT = -1; :}
+	| /*empty*/
+	{: RESULT = 1; :}
+;
+//n_log_or ::= T_PIPE:p1 T_PIPE:p2
+//	{: RESULT = p1 + p1; :}
+//;
+//n_log_and ::= T_AMP:p1 T_AMP:p2
+//	{: RESULT = p1 + p1; :}
+//;
+/* TODO function macro */		
+			
+
+/* 1.)
+ * #ifdef MACRO controlled text #endif
+ * 2.)
+ * #if expression controlled text #endif
+ * 3.)
+ * defined ( name ) | defined name | defined BUFSIZE && BUFSIZE >= 1024
+ * 4.)
+ * #if expression text-if-true #else text-if-false #endif
+ * 5.) 
+ * #elif expression controlled text
+ */

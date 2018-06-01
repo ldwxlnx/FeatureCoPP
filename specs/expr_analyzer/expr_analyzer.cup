@@ -1,0 +1,433 @@
+/* ----------------------Preliminary Declarations Section--------------------*/
+   
+/* Import the class java_cup.runtime.*  */
+import java_cup.runtime.*;
+import de.ovgu.spldev.featurecopp.*;
+import de.ovgu.spldev.featurecopp.splmodel.FeatureTree;
+import de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Node;
+import de.ovgu.spldev.featurecopp.splmodel.IfTree;
+import de.ovgu.spldev.featurecopp.splmodel.IfdefTree;
+import de.ovgu.spldev.featurecopp.splmodel.IfndefTree;
+import de.ovgu.spldev.featurecopp.splmodel.ElifTree;
+import java.util.LinkedList;
+
+init with {:
+	currFMacroArgs = new LinkedList<FeatureTree.Node>();
+:};
+
+action code {:	
+	// init first
+:};
+
+scan with {:
+	// just to obtain the line/column-occurences
+	Symbol currRead = getScanner().next_token();
+	line = currRead.left + 1;
+	column = currRead.right + 1;
+	return currRead;
+:};
+
+/* Parser code to change the way the parser reports errors (include
+   line and column number of the error). */
+parser code {:
+	static class ParserException extends Exception {
+		public ParserException(String msg) {
+			super(msg);
+		}
+	}
+	public int getLine() {
+		return line;
+	}
+	public int getColumn() {
+		return column;
+	}
+    /* Change the method report_error so it will display the line and
+       column of where the error occurred in the input as well as the
+       reason for the error which is passed into the method in the
+       String 'message'. */
+    public void report_error(String message, Object info) {
+        /* Create a StringBuffer called 'm' with the string 'Error' in it. */
+        m = new StringBuffer();
+   
+        /* Check if the information passed to the method is the same
+           type as the type java_cup.runtime.Symbol. */
+        if (info instanceof java_cup.runtime.Symbol) {
+            /* Declare a java_cup.runtime.Symbol object 's' with the
+               information in the object info that is being typecasted
+               as a java_cup.runtime.Symbol object. */
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+   
+            /* Check if the line number in the input is greater or
+               equal to zero. */
+            if (s.left >= 0) {                
+                /* Add to the end of the StringBuffer error message
+                   the line number of the error in the input. */
+                m.append(" in line "+ s.left);   
+                /* Check if the column number in the input is greater
+                   or equal to zero. */
+                if (s.right >= 0)                    
+                    /* Add to the end of the StringBuffer error message
+                       the column number of the error in the input. */
+                    m.append(", column "+ s.right);
+            }
+        }
+   
+        /* Add to the end of the StringBuffer error message created in
+           this method the message that was passed into this method. */
+        //m.append(message);       
+        /* Print the contents of the StringBuffer 'm', which contains
+           an error message, out on a line. */
+        //System.err.println(m);
+    }
+   
+    /* Change the method report_fatal_error so when it reports a fatal
+       error it will display the line and column number of where the
+       fatal error occurred in the input as well as the reason for the
+       fatal error which is passed into the method in the object
+       'message' and then exit.*/
+    public void report_fatal_error(String message, Object info) throws Exception {
+        report_error(message, info);        
+        throw new ParserException("Syntax error: " + m.toString());
+    }
+    	// TODO 2014-07-27 off-by-one(+1) at e.g. Var-decls, otherwise correct
+	// current line where lexed symbol occured
+	private int line;
+	// current column where lexed symbol occured
+	private int column;
+	private StringBuffer m;
+	// storage of analyzed function macro arguments (to be propagated to fmacro-node)
+	LinkedList<Node> currFMacroArgs;
+:};
+   
+
+   
+/* ------------Declaration of Terminals and Non Terminals Section----------- */
+/* Terminals (tokens returned by the scanner).  
+   Terminals that have no value are listed first and then terminals
+   that do have an value, in this case an integer value, are listed on
+   the next line down.
+ */
+terminal String
+	T_IF,			// if
+	T_IFDEF,		// ifdef
+	T_IFNDEF,		// ifndef
+	T_ELIF,			// elif
+	T_DEFINED,		// defined
+	T_CHAR_LIT,		// any ascii character enclosed within simple ticks e.g 'x', '\t'
+	T_LPAR,			// (
+	T_RPAR,			// )
+	T_IDENTIFIER,	// name by convention
+	T_INTEGER_LIT,	// any decimal. hexadecimal, octal or suffixed integer literal		
+	T_SHARP, 		// #
+	T_LOG_NEG,		// !
+	T_PLUS,			// +
+	T_UPLUS,		// for disambiguation
+	T_MINUS,		// -
+	T_UMINUS,		// for disambiguation
+	T_TIMES,		// *
+	T_DIVIDE,		// /
+	T_MOD,			// %
+	T_COMMA,		// ,
+	T_PIPE,			// |
+	T_CARET,		// ^
+	T_TILD,			// ~
+	T_AMP,			// &
+	T_LSHIFT,		// <<
+	T_RSHIFT,		// >>
+	T_LT,			// <
+	T_GT,			// >
+	T_LE,			// <=
+	T_GE,			// >=
+	T_EQUIV,		// ==
+	T_ANTIV,		// !=
+	T_LOG_OR,		// ||
+	T_LOG_AND,		// &&
+	T_QM,			// ?
+	T_COLON,		// :
+	T_FUNMAC_ARG_GLOB_HEADER, // FUNMACRO(<foo-bar.h>)
+	T_FUNMAC_ARG_LOC_HEADER, // FUNMACRO("foo-bar.h")
+	T_FUNMAC_ARG_NAMESPACE, // FUNMACRO (foo::bar)
+	T_FUNMAC_NO_PARENTHESES // FUNMACRO "foo.h"
+;
+
+//terminal Integer
+//	T_DEC_NAT_LIT	// any decimal integer
+//;
+
+non terminal de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Node
+	n_macro,
+	n_macro_arglist,
+	n_macro_args,
+	n_expr,
+	n_literal,
+	n_defined
+;
+non terminal de.ovgu.spldev.featurecopp.splmodel.FeatureTree
+	n_conditional,
+	n_conditional_clause
+;
+/* -------------Precedence and Associatively of Terminals Section----------- */
+/* Precedences 
+ * http://en.cppreference.com/w/c/language/operator_precedence
+ * We use them since the well-known layered precedence is a little lengthy
+ */
+precedence right T_QM, T_COLON;
+precedence left T_LOG_OR;
+precedence left T_LOG_AND;
+precedence left T_PIPE;
+precedence left T_CARET;
+precedence left T_AMP;
+precedence left T_EQUIV, T_ANTIV;
+precedence left T_LT, T_GT, T_LE, T_GE;
+precedence left T_LSHIFT, T_RSHIFT;
+precedence left T_PLUS, T_MINUS;
+precedence left T_TIMES, T_DIVIDE, T_MOD;
+precedence left T_UMINUS, T_UPLUS, T_LOG_NEG;
+   
+/* ----------------------------Grammar Section-------------------- */
+/* productions    */
+
+n_conditional ::= T_SHARP:sh n_conditional_clause:condclause
+	{:
+		// since we have parse seperately due to allowed whitespace between # and keyword
+		// we have to complete (concat) the 'keyword' manually here :-/
+		condclause.setKeyword(sh + condclause.getKeyword());
+		RESULT = condclause;
+	:}
+;
+n_conditional_clause ::= T_IF:_if n_expr:e
+	{:
+		FeatureTree ftree = new IfTree();
+		ftree.setKeyword(_if);
+		ftree.setRoot(e);
+		RESULT = ftree;
+	:}
+	| T_ELIF:elif n_expr:e
+	{: 
+		FeatureTree ftree = new ElifTree();
+		ftree.setKeyword(elif);
+		ftree.setRoot(e);
+		RESULT = ftree;
+	:}
+	| T_IFDEF:ifdef n_macro:m
+	{:
+		FeatureTree ftree = new IfdefTree();
+		ftree.setKeyword(ifdef);
+		ftree.setRoot(m);
+		RESULT = ftree;
+	:}
+/*	
+	| T_IFDEF:ifdef n_defined:d	// unintended but permitted usage (at least in gcc)
+	{:
+		FeatureTree ftree = new IfdefTree();
+		ftree.setKeyword(ifdef);
+		ftree.setRoot(d);
+		RESULT = ftree;
+	:}
+*/	
+	| T_IFNDEF:ifndef n_macro:m
+	{:
+		FeatureTree ftree = new IfndefTree();
+		ftree.setKeyword(ifndef);
+		ftree.setRoot(m);
+		RESULT = ftree;
+	:}
+/*	
+	| T_IFNDEF:ifndef n_defined:d // unintended but permitted usage (at least in gcc)
+	{: 
+		FeatureTree ftree = new IfndefTree();
+		ftree.setKeyword(ifndef);
+		ftree.setRoot(d);
+		RESULT = ftree;
+	:}
+*/
+;
+/* From: https://gcc.gnu.org/onlinedocs/cpp/If.html#If corresponding to #if 'expr'
+   expression is a C expression of integer type, subject to stringent restrictions. It may contain
+    1.) Integer constants.
+    2.) Character constants, which are interpreted as they would be in normal code.
+    3.) Arithmetic operators for addition, subtraction, multiplication, division, bitwise operations, shifts, comparisons,
+      and logical operations (&& and ||). The latter two obey the usual short-circuiting rules of standard C.
+    4.) Macros. All macros in the expression are expanded before actual computation of the expression's value begins.
+    5.) Uses of the defined operator, which lets you check whether macros are defined in the middle of an '#if'
+    6.) Identifiers that are not macros, which are all considered to be the number zero. This allows you to write
+      #if MACRO instead of #ifdef MACRO, if you know that MACRO, when defined, will always have a nonzero value.
+      Function-like macros used without their function call parentheses are also treated as zero. 
+ */
+// we could optionally calculate to detect 0-expanding expressions rendering a feature dead
+// but this additionally forces us to maintain a symbol table to expand values of defined macros
+n_expr ::= n_expr:cond T_QM:qm n_expr:expr_t T_COLON:col n_expr:expr_f
+	{:
+		de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Ternary ternary
+			= new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Ternary(cond, expr_t, expr_f, qm, col);
+		//System.out.println(ternary);
+		RESULT = ternary;	
+			
+	:}
+	| n_expr:e1 T_LOG_OR:op n_expr:e2	// A || B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.LogOr(e1, e2, op);
+	:}			
+	| n_expr:e1 T_LOG_AND:op n_expr:e2		// A && B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.LogAnd(e1, e2, op);
+	:}	
+	| n_expr:e1 T_PIPE:op n_expr:e2			// A | B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.BinOr(e1, e2, op);
+	:}	
+	| n_expr:e1 T_CARET:op n_expr:e2			// A ^ B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.BinXor(e1, e2, op);
+	:}	
+	| n_expr:e1 T_AMP:op n_expr:e2			// A & B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.BinAnd(e1, e2, op);
+	:}	
+	| n_expr:e1 T_EQUIV:op n_expr:e2		// A == B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Eq(e1, e2, op);
+	:}	
+	| n_expr:e1 T_ANTIV:op n_expr:e2		// A != B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.NEq(e1, e2, op);
+	:}	
+	| n_expr:e1 T_LT:op n_expr:e2			// A < B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Lt(e1, e2, op);
+	:}	
+	| n_expr:e1 T_LE:op n_expr:e2			// A <= B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.LEq(e1, e2, op);
+	:}	
+	| n_expr:e1 T_GT:op n_expr:e2			// A > B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Gt(e1, e2, op);
+	:}	
+	| n_expr:e1 T_GE:op n_expr:e2			// A >= B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.GEq(e1, e2, op);
+	:}	
+	| n_expr:e1 T_LSHIFT:op n_expr:e2		// A << B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.LShift(e1, e2, op);
+	:}	
+	| n_expr:e1 T_RSHIFT:op n_expr:e2		// A >> B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.RShift(e1, e2, op);
+	:}	
+	| n_expr:e1 T_PLUS:op n_expr:e2    		// A + B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Plus(e1, e2, op);
+	:}	
+	| n_expr:e1 T_MINUS:op n_expr:e2    	// A - B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Minus(e1, e2, op);
+	:}	 
+	| n_expr:e1 T_TIMES:op n_expr:e2 		// A * B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Mult(e1, e2, op);
+	:}	
+	| n_expr:e1 T_DIVIDE:op n_expr:e2 		// A / B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Div(e1, e2, op);
+	:}	
+	| n_expr:e1 T_MOD:op n_expr:e2 			// A % B
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Mod(e1, e2, op);
+	:}	 
+	| n_literal:l							// Literals
+	{: RESULT = l; :}	                
+	| T_MINUS:m n_expr:e             		// negative signed 
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.UnaryMinus(null, e, m);
+	:}	
+	%prec T_UMINUS
+	| T_PLUS:p n_expr:e             		// positive signed
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.UnaryPlus(null, e, p);
+	:}	
+	%prec T_UPLUS
+	| T_LOG_NEG:ln n_expr:e					// ! expr (logical negation)
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.UnaryLogNeg(null, e, ln);
+	:}	
+	| T_TILD:bn n_expr:e					// ~ expr (bitwise negation)
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.UnaryBitNeg(null, e, bn);
+	:}
+	| n_macro:m								// MACRO itself
+	{: RESULT = m; :}	
+	| n_defined:d
+	{: RESULT = d; :}						// defined operator
+	// add further here
+	| T_LPAR:lp n_expr:e T_RPAR:rp    		// Parentheses ( expr )
+	{:
+		e.setEmbracedByParentheses();		// for presentational reasons
+		RESULT = e;
+	:} 
+;
+n_literal ::= T_INTEGER_LIT:lit
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.IntLiteral(null, null, lit);
+	:}
+	| T_CHAR_LIT:lit
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.CharLiteral(null, null, lit);
+	:}
+;
+n_macro	::= T_IDENTIFIER:id // object macro
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, id);
+	:}
+	| T_FUNMAC_ARG_GLOB_HEADER:header	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);
+	:}
+	| T_FUNMAC_ARG_LOC_HEADER:header {:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);
+	:}
+	| T_FUNMAC_ARG_NAMESPACE:namesp	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, namesp);
+	:}
+	| T_FUNMAC_NO_PARENTHESES:fmacnopar {:		
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, fmacnopar);
+	:}
+	| T_IDENTIFIER:id T_LPAR:lpar n_macro_arglist:arglist T_RPAR:rpar // function macro
+	{:
+		de.ovgu.spldev.featurecopp.splmodel.FeatureTree.FunctionMacro macroNode
+			= new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.FunctionMacro(null, null, id);
+		macroNode.setArgs(parser.currFMacroArgs);
+		// prepare new argument list for following runs
+		parser.currFMacroArgs = new LinkedList<FeatureTree.Node>();
+		RESULT = macroNode;
+	:}	
+;
+n_macro_arglist ::= n_macro_args:args
+	{: RESULT = args; :}
+	| /* empty */
+;
+n_macro_args ::= n_expr:expr
+	{:
+		parser.currFMacroArgs.add(expr);
+		//expr.setArgs(args);
+		//RESULT = new MacroArg(null, expr, );
+	:}
+	T_COMMA:c n_macro_args:args
+	| n_expr:expr
+	{:
+		parser.currFMacroArgs.add(expr);
+		RESULT = expr;
+	:}
+;		
+n_defined ::= T_DEFINED:def n_macro:m
+	{:
+		// makes #if defined A -> #if defined(A) and hence such exprs equivalent to occurrences with parentheses
+		m.setEmbracedByParentheses();
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Defined(null, m, def);
+	:}
+	| T_DEFINED:def T_LPAR:lpar n_macro:m T_RPAR:rpar
+	{:
+		m.setEmbracedByParentheses();		// for presentational reasons
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Defined(null, m, def);
+	:}
+;	
