@@ -22,6 +22,12 @@ in different feature modules (e.g., `Feature B`) or to another role within the s
 
 ### Re-assembly (Re-Integration a.k.a `--merge`)
 
+FeatureCoPP can revert the physical separation based on a given already split (`<inputdir>_split`) directory and the original
+project. FeatureCoPP assumes original project location next to `<inputdir>_split` and deduces its name automatically.
+For instance, given `/tmp/foo_split` as input, FeatureCoPP assumes the original project as `/tmp/foo`.
+Now all changes within the feature modules are file-wise superimposed (i.e., overwritten) onto their sibling files within the
+original project. The output is written to `<inputdir>_merge`. If no changes have been made within the feature modules, `<inputdir>` and `<input>_merge` are structurally and textually identical (see [Go to limitations](#limitations)).
+
 ## Getting started
 
 ### Binary
