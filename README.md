@@ -93,17 +93,36 @@ We strongly recommend to setup different run configurations for each mode and te
 
 ## Usage
 
+You can invoke FeatureCoPP on your terminal emulator directly as explained within the following subsections or by the provided wrapper scripts. Using FeatureCoPP from a given IDE requires you to setup the program arguments corresponding to the following explanations.
+
 ### Physical Separation
 `java -jar FeatureCoPP.jar --split | --asplit <inputdir> [<regex>]`
+`--split` - Performs physical separation without `PSPOT` calculation (short runtime).
+`--asplit` - Performs physical separation with `PSPOT` calculation (long runtime).
 
+`<inputdir>` - C source project
+`<regex>` - Java.tm compliant regular expression matching the `constExpr` of a conditional directive (default: ".*")
+
+If whitespaces occur in path names or regular expression, you should enclose them in double quotes "".
 
 ### Re-Integration
-`java -jar FeatureCoPP.jar --merge <inputdir> [<regex>]` 
+`java -jar FeatureCoPP.jar --merge <inputdir>_split` 
+Merges given directory in conjunction with original project (`<inputdir>` residing next to `<inputdir>_split`) into a new
+project `<inputdir>_merged`. 
 
 ### Preview
 `java -jar FeatureCoPP.jar --report | --areport <inputdir> [<regex>]`
 
-## Dependecies
+Analogously to [Physical Separation](#physical-separation) but without actually performing extraction. This mode generates only
+the XML journal (cf. [Output](#reporting)) with and without syntactical analysis.
+
+## Dependencies
+
+## Reporting
+
+### Logs
+
+### Reports
 
 ## Regenerating Acceptors
 
