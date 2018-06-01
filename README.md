@@ -93,6 +93,16 @@ We strongly recommend to setup different run configurations for each mode and te
 
 ## Usage
 
+### Physical Separation
+`java -jar FeatureCoPP.jar --split | --asplit <inputdir> [<regex>]`
+
+
+### Re-Integration
+`java -jar FeatureCoPP.jar --merge <inputdir> [<regex>]` 
+
+### Preview
+`java -jar FeatureCoPP.jar --report | --areport <inputdir> [<regex>]`
+
 ## Dependecies
 
 ## Regenerating Acceptors
