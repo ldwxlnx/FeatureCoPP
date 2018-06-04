@@ -132,7 +132,7 @@ FeatureCoPP relies on the following libraries:
 | Eclipse CDT | 5.6.0 | c-parser framework used for statistical analysis | [Eclipse CDT](https://www.eclipse.org/cdt/) | yes |
 | Choco Solver | 4.0.4 | CSP solver to find macro settings to apply CDT parser | [Choco](https://github.com/chocoteam/choco-solver) | yes |
 
-For modifications of FeatureCoPP regarding its lexers and parsers, you should install Apache Ant&#8482; first and perform a setup corresponding to the resüective documentation.
+For modifications of FeatureCoPP regarding its lexers and parsers, you should install Apache Ant&#8482; first and perform a setup corresponding to the respective documentation.
 All libraries are either built into the [Release](https://github.com/ldwxlnx/FeatureCoPP/releases) of FeatureCoPP or shipped alongside sources in folder `lib`. The shipped Eclipse project has already setup respective jar dependencies. In case the jar inclusions do not work for you, add the following jars by `project properties->java build path-libraries->add jars...` by selecting them from the `lib`folder:
 
 ![LibDep](/doc/resources/img/libdep.png) 
