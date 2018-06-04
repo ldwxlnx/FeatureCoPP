@@ -49,7 +49,7 @@ developers in their decision, which features are suitable for physical separatio
 	| stmts | 2 | functional volume of controlled code fragment | 
 	| comment | 1 | additional helpers, useful as beacons during maintenance | 
 	
-	Simply out, the more of the above syntactical structures a role provides the higher it is ranked.
+	Simply put, the more of the above syntactical structures a role provides the higher it is ranked.
 	Since only natural values can occur the expected values lie in between [0, 1].
 		
 Based on these heuristics Physical Separation Potential is calculated as `PSPOT = ER + CS`, which results in values in between [0,2].
@@ -145,6 +145,9 @@ FeatureCoPP has the following reporting facilities.
 
 During each run a timestamped log file `FeatureCoPP_<mode>.log` is produced, which shows the significant program activities and possible error situations. Since no log rotation is currently implemented for FeatureCoPP, every invocation overwrites the corresponding log file for the respective mode. Additionally the informational (`[INFO]`) log output is also written `stdout` and errors (`[FAIL]`) are written to `stderr`.
 
+The modes `asplit` and `areport` additional produce two further logs. The log `FeatureCoPP_ast.log` shows the respective detected C ASTs for each role. The log `FeatureCoPP_csp.log` contains information about the behavior of Choco's CSP solver.
+Both files can grow to a remarkable size, even on small sized source projects. Therefore, make shure you have a reasonable amount of disk space on the partition where you invoke FeatureCoPP. 
+
 ### Report
 
 The modes `asplit`, `split`, `areport` and `report` write a XML journal to the output directory `<inputdir>_split named `FeatureCoPP_report.xml` as shown below.
@@ -155,9 +158,12 @@ This journal shows the heuristic values for each role and average and standard d
 
 ## Regenerating Acceptors
 
-- how refresh all scanners/parsers 
+The project directory `specs`contains lexer and parser specifications. In case you want to modify the behavior of lexical and syntactical analysis, you have to regenerate the respective Java classes. This is done by the respective Ant `build.xml`s residing within the corresponding subdirectories. After a successful generation of the respective acceptor the corresponding Java class is written into the source tree. Issue a `Refresh` on your project tree, to make Eclipse aware of the newly generated classes.
 
-## Limitations
-- lexical ambiguities
-- encoding on hybrid platforms (cygwin)
-- cygwin path trouble
+## Related Projects
+
+FeatureCoPP is succesfully used in [PCLocator](https://github.com/ekuiter/PCLocator).
+
+## Related Publications
+
+The concept of FeatureCoPP was firstly introduced in [Proceedings of the 7th International Workshop on Feature-Oriented Software Development](https://dl.acm.org/citation.cfm?id=3001876). Further publications are currently under review and will follow soon.
