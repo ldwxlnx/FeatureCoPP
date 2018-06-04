@@ -162,7 +162,7 @@ The project directory `specs`contains lexer and parser specifications. In case y
 
 ## Related Projects
 
-FeatureCoPP is succesfully used in [PCLocator](https://github.com/ekuiter/PCLocator).
+FeatureCoPP is successfully used in [PCLocator](https://github.com/ekuiter/PCLocator).
 
 ## Related Publications
 
