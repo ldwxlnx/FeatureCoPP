@@ -125,7 +125,7 @@ the XML journal (cf. [Reporting](#reporting)) with and without syntactical analy
 FeatureCoPP relies on the following libraries:
 
 | lib | version | purpose | resource | shipped |
-| --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | Apache Ant&#8482; | 1.10.1 | automated build of binaries | [Apache Ant](https://ant.apache.org/) | no |
 | JFlex | 1.6.1 | ant task to generate lexer | [JFlex](http://jflex.de/) | yes |
 | JCup | 11a | ant task to generate parser | [JCup](http://www2.cs.tum.edu/projects/cup/) | yes |
