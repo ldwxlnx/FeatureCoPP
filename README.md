@@ -82,7 +82,7 @@ Project's structure is pretty much standard:
 1. `src` - clearly the sources (package-wise)
 2. `doc` - doxygen configuration (prepared for generation, requires doxygen and graphviz install)
 3. `lib` - additional library dependencies
-4. `release` - generate your own build here using Apache Ant.&#8482; with provided `build.xml`
+4. `release` - generate your own build here using Apache Ant&#8482; with provided `build.xml`
 5. `specs` - JFlex and JCup lexer and parser specification files
 6. `test_dos` - Test input having `\r\n` line terminators
 7. `test_unix` - Test input having `\n` line terminators
@@ -122,9 +122,15 @@ the XML journal (cf. [Reporting](#reporting)) with and without syntactical analy
 
 ## Dependencies
 
-- ant
-- jflex/jcup
-- choco
+FeatureCoPP relies on the following libraries:
+
+| lib | version | purpose | resource | shipped |
+| --- | --- | --- |
+| Apache Ant&#8482; | 1.10.1 | automated build of binaries | [Apache Ant](https://ant.apache.org/) | no |
+| JFlex | 1.6.1 | ant task to generate lexer | [JFlex](http://jflex.de/) | yes |
+| JCup | 11a | ant task to generate parser | [JCup](http://www2.cs.tum.edu/projects/cup/) | yes |
+| Eclipse CDT | 5.6.0 | c-parser framework used for statistical analysis | [Eclipse CDT](https://www.eclipse.org/cdt/) | yes |
+| Choco Solver | 4.0.4 | CSP solver to find macro settings to apply CDT parser | [Choco](https://github.com/chocoteam/choco-solver) | yes |
 
 ## Reporting
 
