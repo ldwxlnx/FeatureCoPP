@@ -82,7 +82,7 @@ Project's structure is pretty much standard:
 1. `src` - clearly the sources (package-wise)
 2. `doc` - doxygen configuration (prepared for generation, requires doxygen and graphviz install)
 3. `lib` - additional library dependencies
-4. `release` - generate your own build here using Apache Ant.&#8482; with provided `build.xml`
+4. `release` - generate your own build here using Apache Ant&#8482; with provided `build.xml`
 5. `specs` - JFlex and JCup lexer and parser specification files
 6. `test_dos` - Test input having `\r\n` line terminators
 7. `test_unix` - Test input having `\n` line terminators
@@ -122,9 +122,20 @@ the XML journal (cf. [Reporting](#reporting)) with and without syntactical analy
 
 ## Dependencies
 
-- ant
-- jflex/jcup
-- choco
+FeatureCoPP relies on the following libraries:
+
+| lib | version | purpose | resource | shipped |
+| --- | --- | --- | --- | --- |
+| Apache Ant&#8482; | 1.10.1 | automated build of binaries | [Apache Ant](https://ant.apache.org/) | no |
+| JFlex | 1.6.1 | ant task to generate lexer | [JFlex](http://jflex.de/) | yes |
+| JCup | 11a | ant task to generate parser | [JCup](http://www2.cs.tum.edu/projects/cup/) | yes |
+| Eclipse CDT | 5.6.0 | c-parser framework used for statistical analysis | [Eclipse CDT](https://www.eclipse.org/cdt/) | yes |
+| Choco Solver | 4.0.4 | CSP solver to find macro settings to apply CDT parser | [Choco](https://github.com/chocoteam/choco-solver) | yes |
+
+For modifications of FeatureCoPP regarding its lexers and parsers, you should install Apache Ant&#8482; first and perform a setup corresponding to the resüective documentation.
+All libraries are either built into the [Release](https://github.com/ldwxlnx/FeatureCoPP/releases) of FeatureCoPP or shipped alongside sources in folder `lib`. The shipped Eclipse project has already setup respective jar dependencies. In case the jar inclusions do not work for you, add the following jars by `project properties->java build path-libraries->add jars...` by selecting them from the `lib`folder:
+
+![LibDep](/doc/resources/img/libdep.png) 
 
 ## Reporting
 
