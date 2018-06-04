@@ -143,7 +143,7 @@ FeatureCoPP has the following reporting facilities.
 
 ### Logs
 
-During each run a timestamped log file `FeatureCoPP_<mode>.log is produced, which shows the significant program activities and possible error situations. Since no log rotation is currently implemented for FeatureCoPP, every invocation overwrites the corresponding log file for the respective mode. Additionally the informational (`[INFO]`) log output is also written `stdout` and errors (`[FAIL]`) are written to `stderr`.
+During each run a timestamped log file `FeatureCoPP_<mode>.log` is produced, which shows the significant program activities and possible error situations. Since no log rotation is currently implemented for FeatureCoPP, every invocation overwrites the corresponding log file for the respective mode. Additionally the informational (`[INFO]`) log output is also written `stdout` and errors (`[FAIL]`) are written to `stderr`.
 
 ### Report
 
@@ -151,7 +151,7 @@ The modes `asplit`, `split`, `areport` and `report` write a XML journal to the o
 	
 ![XMLJ](/doc/resources/img/xmljournal.png)
 
-
+This journal shows the heuristic values for each role and average and standard deviation for each feature module. Furthermore, overall statistics are presented regarding detected `CD`s, number of (requested) features and many more. An additional tool for human readable reporting on these XML journals is soon-to-be provided by our tool [FCJournalReader](https://github.com/ldwxlnx/FCJournalReader).
 
 ## Regenerating Acceptors
 
