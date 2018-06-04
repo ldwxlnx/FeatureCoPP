@@ -146,7 +146,7 @@ FeatureCoPP has the following reporting facilities.
 During each run a timestamped log file `FeatureCoPP_<mode>.log` is produced, which shows the significant program activities and possible error situations. Since no log rotation is currently implemented for FeatureCoPP, every invocation overwrites the corresponding log file for the respective mode. Additionally the informational (`[INFO]`) log output is also written `stdout` and errors (`[FAIL]`) are written to `stderr`.
 
 The modes `asplit` and `areport` additional produce two further logs. The log `FeatureCoPP_ast.log` shows the respective detected C ASTs for each role. The log `FeatureCoPP_csp.log` contains information about the behavior of Choco's CSP solver.
-Both files can grow to a remarkable size, even on small sized source projects. Therefore, make shure you have a reasonable amount of disk space on the partition where you invoke FeatureCoPP. 
+Both files can grow to a remarkable size, even on small sized source projects. Therefore, make sure you have a reasonable amount of disk space on the partition where you invoke FeatureCoPP. 
 
 ### Report
 
