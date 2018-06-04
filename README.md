@@ -139,9 +139,19 @@ All libraries are either built into the [Release](https://github.com/ldwxlnx/Fea
 
 ## Reporting
 
+FeatureCoPP has the following reporting facilities.
+
 ### Logs
 
-### Reports
+During each run a timestamped log file `FeatureCoPP_<mode>.log is produced, which shows the significant program activities and possible error situations. Since no log rotation is currently implemented for FeatureCoPP, every invocation overwrites the corresponding log file for the respective mode. Additionally the informational (`[INFO]`) log output is also written `stdout` and errors (`[FAIL]`) are written to `stderr`.
+
+### Report
+
+The modes `asplit`, `split`, `areport` and `report` write a XML journal to the output directory `<inputdir>_split named `FeatureCoPP_report.xml` as shown below.
+	
+![XMLJ](/doc/resources/img/xmljournal.png)
+
+
 
 ## Regenerating Acceptors
 
