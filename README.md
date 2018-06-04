@@ -23,10 +23,10 @@ in different feature modules (e.g., `Feature B`) or to another role within the s
 ### Re-assembly (Re-Integration a.k.a `--merge`)
 
 FeatureCoPP can revert the physical separation based on a given already split (`<inputdir>_split`) directory and the original
-project. FeatureCoPP assumes original project location next to `<inputdir>_split` and deduces its name automatically.
+project. FeatureCoPP assumes the original project location next to `<inputdir>_split` and deduces its name automatically.
 For instance, given `/tmp/foo_split` as input, FeatureCoPP assumes the original project as `/tmp/foo`.
 Now all changes within the feature modules are file-wise superimposed (i.e., overwritten) onto their sibling files within the
-original project. The output is written to `<inputdir>_merge`. If no changes have been made within the feature modules, `<inputdir>` and `<input>_merge` are structurally and textually identical ([Refer to Limitations](#limitations)).
+original project. The output is written to `<inputdir>_merge`. If no changes have been made within the feature modules, `<inputdir>` and `<input>_merge` are structurally and textually identical.
 
 ### Calculating Physical Separation Potential (a.k.a. the `a`-modes)
 
@@ -34,7 +34,7 @@ FeatureCoPP can also perform a syntactical analysis of controlled code within re
 structures regarding bottom-up program comprehension. The calculated values are a heuristic to assist
 developers in their decision, which features are suitable for physical separation. This heuristic - namely `PSPOT` (Physical Separation Potential) - is an additive compound value consisting of two sub-heuristics:
 1. `ER` (Encapsulation Ratio)
-	Represents the ratio of declared and used symbols to all used symbols within a particular `CD`. Hence, `ER` is rational 
+	Represents the ratio of declared and used symbols to all used symbols within a particular `CD`. Hence, `ER` is real 
 	within the interval [0,1].
 2. `CS` (Comprehension Support).
 	Ranks found syntactic structures against a recommendation vector by calculating the respective cosine similarity.
@@ -69,9 +69,9 @@ binaries over sources.
 To work with the binaries proceed as follows:
 
 1. Download the current stable build [here](https://github.com/ldwxlnx/FeatureCoPP/releases). 
-2. Extract the respective archive to your preferred location.
+2. Extract the respective archive to your preferred filesystem location.
 3. Open your favorite terminal emulator and `cd` into the extracted directory.
-4. Issue a chmod 700 on the invocation shell scripts (`*.sh`) on *nix environments having a `bash` (Please refer to [Limitations](#limitations) for Cygwin usage!).
+4. Issue a chmod 700 on the invocation shell scripts (`*.sh`) on *nix environments having a `bash`.
 5. Refer to [Usage](#usage) for explanations regarding invocation of FeatureCoPP.
 
 ### Sources
@@ -86,7 +86,7 @@ Project's structure is pretty much standard:
 5. `specs` - JFlex and JCup lexer and parser specification files
 6. `test_dos` - Test input having `\r\n` line terminators
 7. `test_unix` - Test input having `\n` line terminators
-8. `conf.d` - configuration directory (currently only `blacklist.conf` for excluding files, which cannot be processed by FeatureCoPP, cf. [Limitations](#limitations))
+8. `conf.d` - configuration directory (currently only `blacklist.conf` for excluding files, which cannot be processed by FeatureCoPP)
 9. `blacklist_examples` - example files which are refused by FeatureCoPP
 
 We strongly recommend to setup different run configurations for each mode and test project (cf. [Usage](#usage)).
