@@ -23,10 +23,10 @@ in different feature modules (e.g., `Feature B`) or to another role within the s
 ### Re-assembly (Re-Integration a.k.a `--merge`)
 
 FeatureCoPP can revert the physical separation based on a given already split (`<inputdir>_split`) directory and the original
-project. FeatureCoPP assumes original project location next to `<inputdir>_split` and deduces its name automatically.
+project. FeatureCoPP assumes the original project location next to `<inputdir>_split` and deduces its name automatically.
 For instance, given `/tmp/foo_split` as input, FeatureCoPP assumes the original project as `/tmp/foo`.
 Now all changes within the feature modules are file-wise superimposed (i.e., overwritten) onto their sibling files within the
-original project. The output is written to `<inputdir>_merge`. If no changes have been made within the feature modules, `<inputdir>` and `<input>_merge` are structurally and textually identical ([Refer to Limitations](#limitations)).
+original project. The output is written to `<inputdir>_merge`. If no changes have been made within the feature modules, `<inputdir>` and `<input>_merge` are structurally and textually identical.
 
 ### Calculating Physical Separation Potential (a.k.a. the `a`-modes)
 
@@ -34,7 +34,7 @@ FeatureCoPP can also perform a syntactical analysis of controlled code within re
 structures regarding bottom-up program comprehension. The calculated values are a heuristic to assist
 developers in their decision, which features are suitable for physical separation. This heuristic - namely `PSPOT` (Physical Separation Potential) - is an additive compound value consisting of two sub-heuristics:
 1. `ER` (Encapsulation Ratio)
-	Represents the ratio of declared and used symbols to all used symbols within a particular `CD`. Hence, `ER` is rational 
+	Represents the ratio of declared and used symbols to all used symbols within a particular `CD`. Hence, `ER` is real 
 	within the interval [0,1].
 2. `CS` (Comprehension Support).
 	Ranks found syntactic structures against a recommendation vector by calculating the respective cosine similarity.
@@ -49,7 +49,7 @@ developers in their decision, which features are suitable for physical separatio
 	| stmts | 2 | functional volume of controlled code fragment | 
 	| comment | 1 | additional helpers, useful as beacons during maintenance | 
 	
-	Simply out, the more of the above syntactical structures a role provides the higher it is ranked.
+	Simply put, the more of the above syntactical structures a role provides the higher it is ranked.
 	Since only natural values can occur the expected values lie in between [0, 1].
 		
 Based on these heuristics Physical Separation Potential is calculated as `PSPOT = ER + CS`, which results in values in between [0,2].
@@ -69,9 +69,9 @@ binaries over sources.
 To work with the binaries proceed as follows:
 
 1. Download the current stable build [here](https://github.com/ldwxlnx/FeatureCoPP/releases). 
-2. Extract the respective archive to your preferred location.
+2. Extract the respective archive to your preferred filesystem location.
 3. Open your favorite terminal emulator and `cd` into the extracted directory.
-4. Issue a chmod 700 on the invocation shell scripts (`*.sh`) on *nix environments having a `bash` (Please refer to [Limitations](#limitations) for Cygwin usage!).
+4. Issue a chmod 700 on the invocation shell scripts (`*.sh`) on *nix environments having a `bash`.
 5. Refer to [Usage](#usage) for explanations regarding invocation of FeatureCoPP.
 
 ### Sources
@@ -86,7 +86,7 @@ Project's structure is pretty much standard:
 5. `specs` - JFlex and JCup lexer and parser specification files
 6. `test_dos` - Test input having `\r\n` line terminators
 7. `test_unix` - Test input having `\n` line terminators
-8. `conf.d` - configuration directory (currently only `blacklist.conf` for excluding files, which cannot be processed by FeatureCoPP, cf. [Limitations](#limitations))
+8. `conf.d` - configuration directory (currently only `blacklist.conf` for excluding files, which cannot be processed by FeatureCoPP)
 9. `blacklist_examples` - example files which are refused by FeatureCoPP
 
 We strongly recommend to setup different run configurations for each mode and test project (cf. [Usage](#usage)).
@@ -139,15 +139,31 @@ All libraries are either built into the [Release](https://github.com/ldwxlnx/Fea
 
 ## Reporting
 
+FeatureCoPP has the following reporting facilities.
+
 ### Logs
 
-### Reports
+During each run a timestamped log file `FeatureCoPP_<mode>.log` is produced, which shows the significant program activities and possible error situations. Since no log rotation is currently implemented for FeatureCoPP, every invocation overwrites the corresponding log file for the respective mode. Additionally the informational (`[INFO]`) log output is also written `stdout` and errors (`[FAIL]`) are written to `stderr`.
+
+The modes `asplit` and `areport` additional produce two further logs. The log `FeatureCoPP_ast.log` shows the respective detected C ASTs for each role. The log `FeatureCoPP_csp.log` contains information about the behavior of Choco's CSP solver.
+Both files can grow to a remarkable size, even on small sized source projects. Therefore, make sure you have a reasonable amount of disk space on the partition where you invoke FeatureCoPP. 
+
+### Report
+
+The modes `asplit`, `split`, `areport` and `report` write a XML journal to the output directory `<inputdir>_split named `FeatureCoPP_report.xml` as shown below.
+	
+![XMLJ](/doc/resources/img/xmljournal.png)
+
+This journal shows the heuristic values for each role and average and standard deviation for each feature module. Furthermore, overall statistics are presented regarding detected `CD`s, number of (requested) features and many more. An additional tool for human readable reporting on these XML journals is soon-to-be provided by our tool [FCJournalReader](https://github.com/ldwxlnx/FCJournalReader).
 
 ## Regenerating Acceptors
 
-- how refresh all scanners/parsers 
+The project directory `specs`contains lexer and parser specifications. In case you want to modify the behavior of lexical and syntactical analysis, you have to regenerate the respective Java classes. This is done by the respective Ant `build.xml`s residing within the corresponding subdirectories. After a successful generation of the respective acceptor the corresponding Java class is written into the source tree. Issue a `Refresh` on your project tree, to make Eclipse aware of the newly generated classes.
 
-## Limitations
-- lexical ambiguities
-- encoding on hybrid platforms (cygwin)
-- cygwin path trouble
+## Related Projects
+
+FeatureCoPP is successfully used in [PCLocator](https://github.com/ekuiter/PCLocator).
+
+## Related Publications
+
+The concept of FeatureCoPP was firstly introduced in [Proceedings of the 7th International Workshop on Feature-Oriented Software Development](https://dl.acm.org/citation.cfm?id=3001876). Further publications are currently under review and will follow soon.
