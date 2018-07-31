@@ -13,6 +13,7 @@ import de.ovgu.spldev.featurecopp.config.Configuration;
 import de.ovgu.spldev.featurecopp.lang.CDTParser;
 import de.ovgu.spldev.featurecopp.lang.CParser;
 import de.ovgu.spldev.featurecopp.lang.cpp.CPPAnalyzer.TYPE;
+import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser.ObjMacroHistogram;
 import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.splmodel.ElifTree;
 import de.ovgu.spldev.featurecopp.splmodel.ElseTree;
@@ -62,6 +63,9 @@ public class FeatureScopeManager {
 			strm.println();
 		}
 	}
+	public ObjMacroHistogram getObjMacroHistogram() {
+		return exprParseDrv.getObjMacroHistogram();
+	}
 
 	/**
 	 * Total stack size (basefile + siblings groups)
@@ -90,7 +94,7 @@ public class FeatureScopeManager {
 			final String conditionalExpr, int lineNumber,CPPAnalyzer.TYPE type) throws Exception {
 		FeatureTree featureTree = null;
 		try {
-			featureTree = parseConditionalExpression(conditionalExpr);
+			featureTree = parseConditionalExpression(conditionalExpr, requestPattern);
 		} catch (Exception e) {
 			// rethrow
 			throw new Exception(e.getMessage() + " for expression: "
@@ -550,9 +554,9 @@ public class FeatureScopeManager {
 	 * @throws Exception
 	 *             Exception in case of lexical or syntactic errors
 	 */
-	private FeatureTree parseConditionalExpression(final String conditionalExpr)
+	private FeatureTree parseConditionalExpression(final String conditionalExpr, final Pattern requestPattern)
 			throws Exception {
-		return exprParseDrv.run(false, conditionalExpr);
+		return exprParseDrv.run(false, conditionalExpr, requestPattern);
 	}
 
 	private static PrintStream ast_strm;

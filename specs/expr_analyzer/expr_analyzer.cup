@@ -10,6 +10,10 @@ import de.ovgu.spldev.featurecopp.splmodel.IfdefTree;
 import de.ovgu.spldev.featurecopp.splmodel.IfndefTree;
 import de.ovgu.spldev.featurecopp.splmodel.ElifTree;
 import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.AbstractMap;
 
 init with {:
 	currFMacroArgs = new LinkedList<FeatureTree.Node>();
@@ -35,11 +39,60 @@ parser code {:
 			super(msg);
 		}
 	}
+	static class ObjMacroHistogram {
+		public ObjMacroHistogram() {
+			objMacroHistogram = new HashMap<String, Integer>();
+		}
+		public String toString() {
+			return objMacroHistogram.toString();
+		}
+		public void setRequestPattern(Pattern requestPattern) {
+			this.requestPattern = requestPattern;
+		}
+		public void insert(String macro) {
+			// insert only requested macro names
+			if (requestPattern.matcher(macro).matches()) {			
+				Integer count = objMacroHistogram.get(macro);
+				// macro not previously detected?
+				if(count == null) {
+					objMacroHistogram.put(macro, 1);
+				}
+				// macro already detected!
+				else {
+					objMacroHistogram.put(macro, count + 1);
+				}
+			}
+		}
+		public int getTotalObjMacroCount() {
+			return objMacroHistogram.size();
+		}
+		public AbstractMap.SimpleEntry<String, Integer> getMostScatteredObjMacro() {
+			int maxObjMacroCount = 0;
+			String maxObjMacroName = null;
+			for (Map.Entry<String, Integer> entry : objMacroHistogram.entrySet()) {
+			    String objMacroName = entry.getKey();
+			    Integer objMacroCount = entry.getValue();
+			    if(objMacroCount > maxObjMacroCount) {
+			    	maxObjMacroCount = objMacroCount;
+			    	maxObjMacroName = objMacroName;
+			    }
+			}
+			return new AbstractMap.SimpleEntry<String, Integer>(maxObjMacroName, maxObjMacroCount);
+		}
+		private HashMap<String, Integer> objMacroHistogram;
+		private Pattern requestPattern;
+	}
 	public int getLine() {
 		return line;
 	}
 	public int getColumn() {
 		return column;
+	}
+	public void insertObjMacro(String macro) {
+		objMacroHistogram.insert(macro);
+	}
+	public ObjMacroHistogram getObjMacroHistogram() {
+		return objMacroHistogram;
 	}
     /* Change the method report_error so it will display the line and
        column of where the error occurred in the input as well as the
@@ -89,6 +142,9 @@ parser code {:
         report_error(message, info);        
         throw new ParserException("Syntax error: " + m.toString());
     }
+    public void setRequestPattern(Pattern requestPattern) {
+    	objMacroHistogram.setRequestPattern(requestPattern);
+    }
     	// TODO 2014-07-27 off-by-one(+1) at e.g. Var-decls, otherwise correct
 	// current line where lexed symbol occured
 	private int line;
@@ -97,6 +153,8 @@ parser code {:
 	private StringBuffer m;
 	// storage of analyzed function macro arguments (to be propagated to fmacro-node)
 	LinkedList<Node> currFMacroArgs;
+	// from here we can derive scattering degree (only object macros are honored!)
+	private static ObjMacroHistogram objMacroHistogram = new ObjMacroHistogram();
 :};
    
 
@@ -379,6 +437,7 @@ n_literal ::= T_INTEGER_LIT:lit
 n_macro	::= T_IDENTIFIER:id // object macro
 	{:
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, id);
+		parser.insertObjMacro(id);	
 	:}
 	| T_FUNMAC_ARG_GLOB_HEADER:header	{:
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);

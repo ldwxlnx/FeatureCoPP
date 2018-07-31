@@ -13,6 +13,7 @@ import de.ovgu.spldev.featurecopp.config.Configuration;
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
 import de.ovgu.spldev.featurecopp.filesystem.Finder;
 import de.ovgu.spldev.featurecopp.filesystem.Finder.Processable;
+import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser.ObjMacroHistogram;
 import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.splmodel.ElifTree;
 import de.ovgu.spldev.featurecopp.splmodel.ElseTree;
@@ -230,6 +231,10 @@ public final class CPPAnalyzer implements Processable {
 			logger.writeInfo("#elif=" + ElifTree.count);
 			logger.writeInfo("#else=" + ElseTree.count);
 			logger.writeInfo("#endif=" + endifCount);
+			ObjMacroHistogram objMacroHistogram = featureScopeManager.getObjMacroHistogram();
+			logger.writeInfo("SD=" + objMacroHistogram.toString());
+			logger.writeInfo("SD_max=" + objMacroHistogram.getMostScatteredObjMacro());
+			logger.writeInfo("SD_total="+ objMacroHistogram.getTotalObjMacroCount());
 			logger.writeInfo(String.format(
 					"Processed text size (UTF-8): %d bytes (%03.3fMiB)",
 					textSize, textSize * 1.0 / (1024 * 1024)));
