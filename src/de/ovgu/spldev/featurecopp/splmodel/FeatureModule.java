@@ -129,10 +129,12 @@ public class FeatureModule implements Comparable<FeatureModule> {
 			fw.write(String.format("%" + indent + "s<feature uid=\"%d\""
 					+ " file=\"%s\"" + " requested=\"%b\">%s" // linebreak
 					+ "%" + (indent + 1) + "s<expr><![CDATA[%s]]></expr>%s" // linebreak
+					+ "%" + (indent + 1) + "s<td>%d</td>%s"
 					+ "%s" // statistic section or empty
 					+ "%" + (indent + 1) + "s<occs count=\"%d\" dead=\"%d\" valid=\"%d\">%s", // linebreak
 					Configuration.XML_INDENT_WHITESPACE, uid, isRequested ? featureModuleFile : "", isRequested, Configuration.LINE_SEPARATOR,
 					Configuration.XML_INDENT_WHITESPACE, featureTreeToString(), Configuration.LINE_SEPARATOR,
+					Configuration.XML_INDENT_WHITESPACE, featureExprAST.getTanglingDegree(), Configuration.LINE_SEPARATOR,
 					// no analysis performed -> no statistics to display
 					Configuration.SKIP_ANALYSIS ? "" : String.format("%" + (indent + 1) + "s<sem_avg %s />%s"
 							+ "%" + (indent + 1) + "s<sem_dev %s />%s", 
@@ -346,6 +348,9 @@ public class FeatureModule implements Comparable<FeatureModule> {
 
 		public FeatureTree.Node getClonedFTreeRoot() {
 			return ftree.getRootCloned();
+		}
+		public int getTanglingDegree() {
+			return ftree.getTanglingDegree();
 		}
 
 		public void setStats(final Stats stats) {

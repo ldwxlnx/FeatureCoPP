@@ -276,7 +276,7 @@ public class FeatureScopeManager {
 			cacheInMostRecent(featureModule.getOpenMarkup(true,
 					parent.getMostRecentRequestedFeatureFile(),
 					featureTree.toString(), currfeatureOccurrence));
-		}
+		}			
 	}
 
 	/**
@@ -454,10 +454,13 @@ public class FeatureScopeManager {
 	 */
 	private FeatureTree negatedClausesToFeatureTree() {
 		ElseTree ftree = new ElseTree();
+		int td = 0;
 		// only single if*?
 		if (getCurrentNumOfBranches() == 1) {
+			FeatureOccurrence sibling = featureScope.peek().peek().featureOccurrence;
+			td = sibling.getTanglingDegree();
 			// cloning just for presentation reasons (adding parentheses)
-			FeatureTree.Node right = featureScope.peek().peek().featureOccurrence
+			FeatureTree.Node right = sibling
 					.getClonedFTreeRoot();
 			// is sibling root a logical negation?
 			if (right.isLogicalNegation()) {
@@ -486,10 +489,13 @@ public class FeatureScopeManager {
 			Stack<FeatureTree.Node> rootNodes = new Stack<FeatureTree.Node>();
 			Enumeration<Node> eFeatures = featureScope.peek().elements();
 			while (eFeatures.hasMoreElements()) {
+				FeatureOccurrence currSibling = eFeatures.nextElement().featureOccurrence;
 				// cloning just for presentational reasons (adding
 				// parentheses)
-				rootNodes.push(eFeatures.nextElement().featureOccurrence
+				rootNodes.push(currSibling
 						.getClonedFTreeRoot());
+				// else tree has td as sum of all sibling tds
+				td += currSibling.getTanglingDegree();
 			}
 			FeatureTree.Node prevRoot = null;
 			FeatureTree.Node currRoot = null;
@@ -542,6 +548,7 @@ public class FeatureScopeManager {
 			ftree.setRoot(nodeLogNeg);
 		}
 		ftree.setKeyword("#else");
+		ftree.setTanglingDegree(td);
 		return ftree;
 	}
 

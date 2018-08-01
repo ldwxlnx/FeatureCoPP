@@ -13,6 +13,9 @@ import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.AbstractMap;
 
 init with {:
@@ -44,7 +47,14 @@ parser code {:
 			objMacroHistogram = new HashMap<String, Integer>();
 		}
 		public String toString() {
-			return objMacroHistogram.toString();
+			return sortDesc().toString();
+		}
+		// requires java 8 lambda
+		public Map<String, Integer> sortDesc() {
+			return objMacroHistogram.entrySet().stream()
+				    .sorted(Entry.<String, Integer>comparingByValue().reversed())
+				    .collect(Collectors.toMap(Entry::getKey, Entry::getValue,
+				                              (e1, e2) -> e1, LinkedHashMap::new));
 		}
 		public void setRequestPattern(Pattern requestPattern) {
 			this.requestPattern = requestPattern;
@@ -155,6 +165,7 @@ parser code {:
 	LinkedList<Node> currFMacroArgs;
 	// from here we can derive scattering degree (only object macros are honored!)
 	private static ObjMacroHistogram objMacroHistogram = new ObjMacroHistogram();
+	int curr_tangling_degree;
 :};
    
 
@@ -250,6 +261,8 @@ n_conditional ::= T_SHARP:sh n_conditional_clause:condclause
 		// since we have parse seperately due to allowed whitespace between # and keyword
 		// we have to complete (concat) the 'keyword' manually here :-/
 		condclause.setKeyword(sh + condclause.getKeyword());
+		condclause.setTanglingDegree(parser.curr_tangling_degree);
+		parser.curr_tangling_degree = 0;
 		RESULT = condclause;
 	:}
 ;
@@ -437,7 +450,8 @@ n_literal ::= T_INTEGER_LIT:lit
 n_macro	::= T_IDENTIFIER:id // object macro
 	{:
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, id);
-		parser.insertObjMacro(id);	
+		parser.insertObjMacro(id);
+		parser.curr_tangling_degree++;
 	:}
 	| T_FUNMAC_ARG_GLOB_HEADER:header	{:
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);

@@ -43,6 +43,13 @@ public class FeatureTree {
 	public String featureExprToString() {
 		return root.toString();
 	}
+	
+	public void setTanglingDegree(int tangling_degree) {
+		this.tangling_degree = tangling_degree;
+	}
+	public int getTanglingDegree() {
+		return tangling_degree;
+	}
 
 	/**
 	 * Finalizes bottom-up created tree with root node 'root'.
@@ -893,4 +900,5 @@ public class FeatureTree {
 	/** keyword of conditional (e.g. #if|#ifdef|#ifndef|#elif|#else) */
 	protected String keyword;
 	protected static HashMap<String, IntVar> macros = new HashMap<String, IntVar>();
+	protected int tangling_degree;
 }
