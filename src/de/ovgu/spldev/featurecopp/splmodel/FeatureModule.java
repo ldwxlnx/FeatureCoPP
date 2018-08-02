@@ -264,10 +264,10 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * @return newly created FeatureOccurrence
 	 */
 	public FeatureOccurrence addOccurrence(String filename,
-			FeatureOccurrence parent, int lineStart, final FeatureTree ftree) {
+			FeatureOccurrence parent, int lineStart, final FeatureTree ftree, int nestingDepth) {
 		FeatureOccurrence fo = null;
 		featureOccurrences.add(fo = new FeatureOccurrence(filename, parent,
-				lineStart, ftree));
+				lineStart, ftree, nestingDepth));
 		return fo;
 	}
 
@@ -305,12 +305,14 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	public static class FeatureOccurrence {
 		public FeatureOccurrence(String filename,
 				final FeatureOccurrence enclosing, int lineStart,
-				final FeatureTree ftree) {
+				final FeatureTree ftree,
+				int nestingDepth) {
 			this.filename = filename;
 			this.lineStart = lineStart;
 			this.occ_uid = FeatureOccurrence.nextUID();
 			this.enclosing = enclosing;
 			this.ftree = ftree;
+			this.nestingDepth = nestingDepth;
 		}
 
 		public void writeXmlTo(int indent, FileWriter xmlWriter)
@@ -323,6 +325,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 						+ " file=\"%s\""
 						+ " keyword=\"%s\""
 						+ " encl_occ_id=\"%d\""
+						+ " nd=\"%d\""
 						+ " begin=\"%d\""
 						+ " end=\"%d\""
 						+ ">"
@@ -334,6 +337,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 						filename,
 						ftree.getKeyword(),
 						enclosing != null ? enclosing.occ_uid : 0,
+						nestingDepth,
 						lineStart,
 						lineEnd,
 						! (Configuration.SKIP_ANALYSIS || stats == null) ? Configuration.LINE_SEPARATOR + stats.toXML(indent + 1) + Configuration.LINE_SEPARATOR 
@@ -554,6 +558,8 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		private FeatureTree ftree;
 		/** availability dead=true|selectable=false */
 		private boolean isDead;
+		/** nesting depth of role (1=top-lvl, 2=1 lvl below top-lvl,...) */ 
+		private int nestingDepth;
 	}
 
 	/**

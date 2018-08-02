@@ -244,7 +244,7 @@ public class FeatureScopeManager {
 //						parent.getFeatureOccurrence(), lineNumber, featureTree);
 		FeatureModule.FeatureOccurrence currfeatureOccurrence = featureModule
 				.addOccurrence(currentOriginalSourceFile.toString(),
-						parent.getFeatureOccurrence(), lineNumber, featureTree);
+						parent.getFeatureOccurrence(), lineNumber, featureTree, featureScope.size() - 1); // basefile is always on bottom, hence minus 1		
 		// should conditional expression not be filtered by user request?		
 		//if (!requestPattern.matcher(featureTree.toString()).matches()) {
 		if (!requestPattern.matcher(featureTree.featureExprToString()).matches()) {			
