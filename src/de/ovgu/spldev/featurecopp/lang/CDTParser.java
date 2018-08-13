@@ -69,6 +69,7 @@ public abstract class CDTParser {
 	}
 
 	public static class Stats {
+		public enum UNDISC_TYPE { NONE, RET, PARAM, CASE,  GOTO };
 		public static enum RANK {
 			FUNCDEF(6),
 			STRUCTDECL(5),
@@ -89,7 +90,7 @@ public abstract class CDTParser {
 					.format(Locale.US,
 							"PSPOT=\"%.2f\" CS=\"%.2f\" ER=\"%.2f\" funcdefs=\"%.1f\" totaldecls=\"%.1f\" funcdecls=\"%.1f\" structdecls=\"%.1f\" vardecls=\"%.1f\" "
 									+ "symtotal=\"%.1f\" symbound=\"%.1f\" symunbound=\"%.1f\" stmts=\"%.1f\" "
-									+ "exprs=\"%.1f\" funcalls=\"%.1f\" cppdir=\"%.1f\" include=\"%.1f\" comments=\"%.1f\"",
+									+ "exprs=\"%.1f\" funcalls=\"%.1f\" cppdir=\"%.1f\" include=\"%.1f\" comments=\"%.1f\" undisc=\"%s\"",
 							physicalSeparationPotential,
 							comprehensibiltySupport,
 							encapsulationRatio,
@@ -98,7 +99,7 @@ public abstract class CDTParser {
 							numOfSymbolsTotal, numOfSymbolsBound,
 							numOfSymbolsUnbound, numOfStmts,
 							numOfExprs, numOfFuncalls, numOfCPPDirectives,
-							numOfCPPInclude, numOfComments);
+							numOfCPPInclude, numOfComments, undisc_type);
 		}
 		public static double calcScalarProductWithRankVector(double...elements) {
 			if(elements != null && elements.length == RANK_VEC.length) {
@@ -316,6 +317,7 @@ public abstract class CDTParser {
 		protected double comprehensibiltySupport;
 		protected HashMap<IBinding, IASTName> bindingMap;
 		protected HashMap<IBinding, IASTName> symbols;
+		protected UNDISC_TYPE undisc_type = UNDISC_TYPE.NONE;
 	} // public class Stats
 
 	public void writeStatsTo(PrintStream strm) {

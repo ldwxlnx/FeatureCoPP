@@ -22,7 +22,7 @@ public final class ExpressionParserDriver {
 		if(currReader != null) {
 			currReader.close();
 		}
-		parser.setRequestPattern(requestPattern);
+		parser.setRequestPatternProj(requestPattern);
 		currReader = new StringReader(cpp_directive);
 		lexer.yyreset(currReader);
 		FeatureTree ftree = (FeatureTree)parser.parse().value;
@@ -32,8 +32,8 @@ public final class ExpressionParserDriver {
 		}
 		return ftree;
 	}
-	public ObjMacroHistogram getObjMacroHistogram() {
-		return parser.getObjMacroHistogram();
+	public ObjMacroHistogram getObjMacroHistogramProj() {
+		return parser.getObjMacroHistogramProj();
 	}
 	/** generated parser */
 	private ExpressionParser parser;

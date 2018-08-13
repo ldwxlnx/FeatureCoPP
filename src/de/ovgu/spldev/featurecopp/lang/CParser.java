@@ -24,6 +24,7 @@ import org.eclipse.cdt.core.dom.ast.IASTFunctionCallExpression;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNameOwner;
+import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTPreprocessorIncludeStatement;
 import org.eclipse.cdt.core.dom.ast.IASTPreprocessorStatement;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
@@ -31,7 +32,11 @@ import org.eclipse.cdt.core.dom.ast.IBinding;
 import org.eclipse.cdt.core.dom.ast.IFunction;
 import org.eclipse.cdt.core.dom.ast.IVariable;
 import org.eclipse.cdt.core.dom.ast.gnu.c.GCCLanguage;
+import org.eclipse.cdt.internal.core.dom.parser.c.CASTCaseStatement;
+import org.eclipse.cdt.internal.core.dom.parser.c.CASTReturnStatement;
 import org.eclipse.cdt.internal.core.dom.rewrite.commenthandler.ASTCommenter;
+
+import de.ovgu.spldev.featurecopp.lang.CDTParser.Stats.UNDISC_TYPE;
 
 public class CParser extends CDTParser {
 	/**
@@ -356,7 +361,7 @@ public class CParser extends CDTParser {
 		};
 		translationUnit.accept(decls);
 	}
-
+	
 	/**
 	 * Count all statements within given closed line number interval. Compound
 	 * statements are excluded. Subcomponents of those are not.
@@ -396,6 +401,18 @@ public class CParser extends CDTParser {
 									statement.getClass().getSimpleName()));
 						}
 						stats.numOfStmts++;
+					}
+					if(statement instanceof CASTReturnStatement) {
+						if(! isFileLocationValid(beginLine, endLine, statement.getParent().getFileLocation())) {
+							System.out.println(UNDISC_TYPE.RET);
+							stats.undisc_type = UNDISC_TYPE.RET;
+						}						
+					}
+					if(statement instanceof CASTCaseStatement) {
+						if(! isFileLocationValid(beginLine, endLine, statement.getParent().getFileLocation())) {
+							System.out.println(UNDISC_TYPE.CASE);
+							stats.undisc_type = UNDISC_TYPE.CASE;
+						}						
 					}
 				}
 				return ASTVisitor.PROCESS_CONTINUE;

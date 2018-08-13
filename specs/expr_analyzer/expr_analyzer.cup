@@ -37,17 +37,21 @@ scan with {:
 /* Parser code to change the way the parser reports errors (include
    line and column number of the error). */
 parser code {:
-	static class ParserException extends Exception {
+	public static class ParserException extends Exception {
 		public ParserException(String msg) {
 			super(msg);
 		}
 	}
-	static class ObjMacroHistogram {
+	public static class ObjMacroHistogram {
 		public ObjMacroHistogram() {
 			objMacroHistogram = new HashMap<String, Integer>();
 		}
 		public String toString() {
 			return sortDesc().toString();
+		}
+		// needed for else td-maps, when all sibling maps/tds are consolidated into one else
+		public void merge(ObjMacroHistogram src) {
+			objMacroHistogram.putAll(src.objMacroHistogram);
 		}
 		// requires java 8 lambda
 		public Map<String, Integer> sortDesc() {
@@ -72,7 +76,7 @@ parser code {:
 					objMacroHistogram.put(macro, count + 1);
 				}
 			}
-		}
+		}		
 		public int getTotalObjMacroCount() {
 			return objMacroHistogram.size();
 		}
@@ -98,11 +102,21 @@ parser code {:
 	public int getColumn() {
 		return column;
 	}
-	public void insertObjMacro(String macro) {
-		objMacroHistogram.insert(macro);
+	public void insertObjMacroProj(String macro) {
+		objMacroHistogramProj.insert(macro);
 	}
-	public ObjMacroHistogram getObjMacroHistogram() {
-		return objMacroHistogram;
+	public void insertObjMacroExpr(String macro) {
+		objMacroHistogramExpr.insert(macro);
+	}
+	public ObjMacroHistogram getObjMacroHistogramProj() {
+		return objMacroHistogramProj;
+	}
+	public ObjMacroHistogram getObjMacroHistogramExpr() {
+		return objMacroHistogramExpr;
+	}
+	public void newObjMacroHistogramExpr() {
+		objMacroHistogramExpr = new ObjMacroHistogram();
+		objMacroHistogramExpr.setRequestPattern(Pattern.compile(".*"));
 	}
     /* Change the method report_error so it will display the line and
        column of where the error occurred in the input as well as the
@@ -152,8 +166,8 @@ parser code {:
         report_error(message, info);        
         throw new ParserException("Syntax error: " + m.toString());
     }
-    public void setRequestPattern(Pattern requestPattern) {
-    	objMacroHistogram.setRequestPattern(requestPattern);
+    public void setRequestPatternProj(Pattern requestPattern) {
+    	objMacroHistogramProj.setRequestPattern(requestPattern);
     }
     	// TODO 2014-07-27 off-by-one(+1) at e.g. Var-decls, otherwise correct
 	// current line where lexed symbol occured
@@ -163,9 +177,10 @@ parser code {:
 	private StringBuffer m;
 	// storage of analyzed function macro arguments (to be propagated to fmacro-node)
 	LinkedList<Node> currFMacroArgs;
-	// from here we can derive scattering degree (only object macros are honored!)
-	private static ObjMacroHistogram objMacroHistogram = new ObjMacroHistogram();
-	int curr_tangling_degree;
+	// from here we can derive scattering degree (only object macros are honored!) - per project (reused for all files)
+	private static ObjMacroHistogram objMacroHistogramProj = new ObjMacroHistogram();
+	// macro name table per feature expression -> tangling degree => renewed after each expression and stored in feature tree
+	private ObjMacroHistogram objMacroHistogramExpr;
 :};
    
 
@@ -256,13 +271,18 @@ precedence left T_UMINUS, T_UPLUS, T_LOG_NEG;
 /* ----------------------------Grammar Section-------------------- */
 /* productions    */
 
-n_conditional ::= T_SHARP:sh n_conditional_clause:condclause
+n_conditional ::= T_SHARP:sh
+	{:
+		// before each parse a new TD symbol map is setup
+		parser.newObjMacroHistogramExpr();
+	:}
+	n_conditional_clause:condclause
 	{:
 		// since we have parse seperately due to allowed whitespace between # and keyword
 		// we have to complete (concat) the 'keyword' manually here :-/
 		condclause.setKeyword(sh + condclause.getKeyword());
-		condclause.setTanglingDegree(parser.curr_tangling_degree);
-		parser.curr_tangling_degree = 0;
+		//System.out.println(parser.getObjMacroHistogramExpr().getTotalObjMacroCount() + ":" + parser.getObjMacroHistogramExpr());
+		condclause.setTDMap(parser.getObjMacroHistogramExpr());
 		RESULT = condclause;
 	:}
 ;
@@ -450,8 +470,8 @@ n_literal ::= T_INTEGER_LIT:lit
 n_macro	::= T_IDENTIFIER:id // object macro
 	{:
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, id);
-		parser.insertObjMacro(id);
-		parser.curr_tangling_degree++;
+		parser.insertObjMacroProj(id);
+		parser.insertObjMacroExpr(id);
 	:}
 	| T_FUNMAC_ARG_GLOB_HEADER:header	{:
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);

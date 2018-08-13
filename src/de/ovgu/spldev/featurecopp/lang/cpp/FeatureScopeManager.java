@@ -64,7 +64,7 @@ public class FeatureScopeManager {
 		}
 	}
 	public ObjMacroHistogram getObjMacroHistogram() {
-		return exprParseDrv.getObjMacroHistogram();
+		return exprParseDrv.getObjMacroHistogramProj();
 	}
 
 	/**
@@ -454,11 +454,13 @@ public class FeatureScopeManager {
 	 */
 	private FeatureTree negatedClausesToFeatureTree() {
 		ElseTree ftree = new ElseTree();
-		int td = 0;
+
+		ExpressionParser.ObjMacroHistogram tdMap = new ObjMacroHistogram();
 		// only single if*?
 		if (getCurrentNumOfBranches() == 1) {
 			FeatureOccurrence sibling = featureScope.peek().peek().featureOccurrence;
-			td = sibling.getTanglingDegree();
+			tdMap.merge(sibling.getTDMap());
+
 			// cloning just for presentation reasons (adding parentheses)
 			FeatureTree.Node right = sibling
 					.getClonedFTreeRoot();
@@ -495,7 +497,7 @@ public class FeatureScopeManager {
 				rootNodes.push(currSibling
 						.getClonedFTreeRoot());
 				// else tree has td as sum of all sibling tds
-				td += currSibling.getTanglingDegree();
+				tdMap.merge(currSibling.getTDMap());
 			}
 			FeatureTree.Node prevRoot = null;
 			FeatureTree.Node currRoot = null;
@@ -548,7 +550,7 @@ public class FeatureScopeManager {
 			ftree.setRoot(nodeLogNeg);
 		}
 		ftree.setKeyword("#else");
-		ftree.setTanglingDegree(td);
+		ftree.setTDMap(tdMap);
 		return ftree;
 	}
 

@@ -23,6 +23,7 @@ import de.ovgu.spldev.featurecopp.splmodel.FeatureTree.LogAnd;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Node;
 import de.ovgu.spldev.featurecopp.lang.CDTParser;
 import de.ovgu.spldev.featurecopp.lang.CDTParser.Stats;
+import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser;
 
 /**
  * Aggregates feature expression information in conjunction with feature
@@ -134,7 +135,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 					+ "%" + (indent + 1) + "s<occs count=\"%d\" dead=\"%d\" valid=\"%d\">%s", // linebreak
 					Configuration.XML_INDENT_WHITESPACE, uid, isRequested ? featureModuleFile : "", isRequested, Configuration.LINE_SEPARATOR,
 					Configuration.XML_INDENT_WHITESPACE, featureTreeToString(), Configuration.LINE_SEPARATOR,
-					Configuration.XML_INDENT_WHITESPACE, featureExprAST.getTanglingDegree(), Configuration.LINE_SEPARATOR,
+					Configuration.XML_INDENT_WHITESPACE, featureExprAST.getTDMap().getTotalObjMacroCount(), Configuration.LINE_SEPARATOR,
 					// no analysis performed -> no statistics to display
 					Configuration.SKIP_ANALYSIS ? "" : String.format("%" + (indent + 1) + "s<sem_avg %s />%s"
 							+ "%" + (indent + 1) + "s<sem_dev %s />%s", 
@@ -353,8 +354,8 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		public FeatureTree.Node getClonedFTreeRoot() {
 			return ftree.getRootCloned();
 		}
-		public int getTanglingDegree() {
-			return ftree.getTanglingDegree();
+		public ExpressionParser.ObjMacroHistogram getTDMap() {
+			return ftree.getTDMap();
 		}
 
 		public void setStats(final Stats stats) {

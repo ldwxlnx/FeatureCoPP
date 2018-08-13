@@ -15,6 +15,8 @@ import org.chocosolver.solver.variables.RealVar;
 import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.MathUtils;
 
+import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser;
+
 //import com.sun.org.apache.xalan.internal.xsltc.runtime.Node;
 
 /**
@@ -44,12 +46,18 @@ public class FeatureTree {
 		return root.toString();
 	}
 	
-	public void setTanglingDegree(int tangling_degree) {
-		this.tangling_degree = tangling_degree;
+//	public void setTanglingDegree(int tangling_degree) {
+//		this.tangling_degree = tangling_degree;
+//	}
+	public void setTDMap(ExpressionParser.ObjMacroHistogram tdMap) {
+		this.tdMap = tdMap;
 	}
-	public int getTanglingDegree() {
-		return tangling_degree;
+	public ExpressionParser.ObjMacroHistogram getTDMap() {
+		return tdMap;
 	}
+//	public int getTanglingDegree() {
+//		return tdMap.getTotalObjMacroCount();
+//	}
 
 	/**
 	 * Finalizes bottom-up created tree with root node 'root'.
@@ -900,5 +908,6 @@ public class FeatureTree {
 	/** keyword of conditional (e.g. #if|#ifdef|#ifndef|#elif|#else) */
 	protected String keyword;
 	protected static HashMap<String, IntVar> macros = new HashMap<String, IntVar>();
-	protected int tangling_degree;
+	//protected int tangling_degree;
+	protected ExpressionParser.ObjMacroHistogram tdMap;
 }
