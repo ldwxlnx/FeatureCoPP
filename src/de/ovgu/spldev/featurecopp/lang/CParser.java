@@ -25,6 +25,7 @@ import org.eclipse.cdt.core.dom.ast.IASTFunctionDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNameOwner;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
+import org.eclipse.cdt.core.dom.ast.IASTParameterDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTPreprocessorIncludeStatement;
 import org.eclipse.cdt.core.dom.ast.IASTPreprocessorStatement;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
@@ -33,6 +34,7 @@ import org.eclipse.cdt.core.dom.ast.IFunction;
 import org.eclipse.cdt.core.dom.ast.IVariable;
 import org.eclipse.cdt.core.dom.ast.gnu.c.GCCLanguage;
 import org.eclipse.cdt.internal.core.dom.parser.c.CASTCaseStatement;
+import org.eclipse.cdt.internal.core.dom.parser.c.CASTParameterDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.c.CASTReturnStatement;
 import org.eclipse.cdt.internal.core.dom.rewrite.commenthandler.ASTCommenter;
 
@@ -117,8 +119,10 @@ public class CParser extends CDTParser {
 		countStatementsInbetween(beginLine, endLine);
 		countExpressionInbetween(beginLine, endLine);
 		countStructDeclsInbetween(beginLine, endLine);
+		visitFormalParameters(beginLine, endLine);
 		// now all decls are counted
-		stats.numOfVarDecls = stats.numOfTotalDecls - (stats.numOfFuncDefs + stats.numOfFuncDecls + stats.numOfStructDecls);
+		stats.numOfVarDecls = stats.numOfTotalDecls - (stats.numOfFuncDefs
+				+ stats.numOfFuncDecls + stats.numOfStructDecls);
 		countFuncallsInbetween(beginLine, endLine);
 		analyzeFlatInfos(beginLine, endLine);
 		createHeuristics();
@@ -182,8 +186,8 @@ public class CParser extends CDTParser {
 			for (IASTComment comment : translationUnit.getComments()) {
 				IASTFileLocation fileLocation = comment.getFileLocation();
 				// no duplicate processed before AND inbetween boundaries?
-				if (!uniqueLocations.contains(fileLocation
-						.getStartingLineNumber())
+				if (!uniqueLocations
+						.contains(fileLocation.getStartingLineNumber())
 						&& isFileLocationValid(beginLine - 1, endLine,
 								fileLocation)) {
 					// a comment can be on same line as directive, hence include
@@ -194,6 +198,36 @@ public class CParser extends CDTParser {
 				}
 			}
 		}
+	}
+
+	private void visitFormalParameters(final int beginLine, final int endLine)
+			throws Exception {
+		checkLineNumberInterval(beginLine, endLine);
+		if (debug) {
+			System.out.println(
+					String.format("FPARAM (%d,%d):", beginLine, endLine));
+		}
+		ASTVisitor fparamVisitor = new ASTVisitor() {
+			{
+				shouldVisitParameterDeclarations = true;
+			}
+
+			@Override
+			public int visit(IASTParameterDeclaration paramDecl) {
+				IASTFileLocation fileLocation = paramDecl.getFileLocation();
+				// does fparam occur INBETWEEN our requested code lines
+				// AND param is topmost node in ast excerpt, hence
+				// undisciplined
+				if (isFileLocationValid(beginLine, endLine, fileLocation)
+						&& !isFileLocationValid(beginLine, endLine,
+								paramDecl.getParent().getFileLocation())) {
+					System.out.println(UNDISC_TYPE.PARAM);
+					stats.undisc_type = UNDISC_TYPE.PARAM;
+				}
+				return ASTVisitor.PROCESS_CONTINUE;
+			}
+		};
+		translationUnit.accept(fparamVisitor);
 	}
 
 	/**
@@ -211,8 +245,8 @@ public class CParser extends CDTParser {
 			final int endLine) throws Exception {
 		checkLineNumberInterval(beginLine, endLine);
 		if (debug) {
-			System.out.println(String.format("DECLS (%d,%d):", beginLine,
-					endLine));
+			System.out.println(
+					String.format("DECLS (%d,%d):", beginLine, endLine));
 		}
 		ASTVisitor declVisitor = new ASTVisitor() {
 			{
@@ -225,9 +259,9 @@ public class CParser extends CDTParser {
 				// does name occur INBETWEEN our requested code lines
 				if (isFileLocationValid(beginLine, endLine, fileLocation)) {
 					// re-use binding as symbol table key
-					IASTName declName = declarator.getName();					
+					IASTName declName = declarator.getName();
 					IBinding binding = declName.resolveBinding();
-					
+
 					// TODO unclear by doc why this could happen, but it does
 					// see: tk+-3.20.0/gtk/gtkprinteroptionset.h for symbols
 					// option (2x), user_data (1x) and 4x blank name!
@@ -278,8 +312,8 @@ public class CParser extends CDTParser {
 			throws Exception {
 		checkLineNumberInterval(beginLine, endLine);
 		if (debug) {
-			System.out.println(String.format("NAMES (%d,%d):", beginLine,
-					endLine));
+			System.out.println(
+					String.format("NAMES (%d,%d):", beginLine, endLine));
 		}
 		ASTVisitor nameVisitor = new ASTVisitor() {
 			{
@@ -292,8 +326,8 @@ public class CParser extends CDTParser {
 			public int visit(IASTName name) {
 				IASTFileLocation fileLocation = name.getFileLocation();
 				// visit only RVALs otherwise decl-inits are counted twice!
-				if (name.isReference()
-						&& isFileLocationValid(beginLine, endLine, fileLocation)) {
+				if (name.isReference() && isFileLocationValid(beginLine,
+						endLine, fileLocation)) {
 					if (debug) {
 						System.out.println(String.format("\t|-(%d:%d) %s",
 								fileLocation.getStartingLineNumber(),
@@ -306,10 +340,10 @@ public class CParser extends CDTParser {
 		};
 		translationUnit.accept(nameVisitor);
 		if (debug) {
-			System.out.println("=> unique symbols in perspective: "
-					+ currSymbolMap);
-			System.out.println("=> declarations in perspective: "
-					+ currBindingMap);
+			System.out.println(
+					"=> unique symbols in perspective: " + currSymbolMap);
+			System.out.println(
+					"=> declarations in perspective: " + currBindingMap);
 		}
 	}
 
@@ -328,8 +362,8 @@ public class CParser extends CDTParser {
 			final int endLine) throws Exception {
 		checkLineNumberInterval(beginLine, endLine);
 		if (debug) {
-			System.out.println(String.format("STRUCT/UNIONDECLS (%d,%d):", beginLine,
-					endLine));
+			System.out.println(String.format("STRUCT/UNIONDECLS (%d,%d):",
+					beginLine, endLine));
 		}
 		ASTVisitor decls = new ASTVisitor() {
 			{
@@ -361,7 +395,7 @@ public class CParser extends CDTParser {
 		};
 		translationUnit.accept(decls);
 	}
-	
+
 	/**
 	 * Count all statements within given closed line number interval. Compound
 	 * statements are excluded. Subcomponents of those are not.
@@ -374,12 +408,12 @@ public class CParser extends CDTParser {
 	 *             in case line numbers are invalid
 	 * @see {@link CParser#checkLineNumberInterval}
 	 */
-	private void countStatementsInbetween(final int beginLine, final int endLine)
-			throws Exception {
+	private void countStatementsInbetween(final int beginLine,
+			final int endLine) throws Exception {
 		checkLineNumberInterval(beginLine, endLine);
 		if (debug) {
-			System.out.println(String.format("STMTS (%d,%d):", beginLine,
-					endLine));
+			System.out.println(
+					String.format("STMTS (%d,%d):", beginLine, endLine));
 		}
 		ASTVisitor statement = new ASTVisitor() {
 			{
@@ -390,7 +424,8 @@ public class CParser extends CDTParser {
 			public int visit(IASTStatement statement) {
 				IASTFileLocation fileLocation = statement.getFileLocation();
 				if (isFileLocationValid(beginLine, endLine, fileLocation)) {
-					// compound statements and declaration statements are ignored - their contents are
+					// compound statements and declaration statements are
+					// ignored - their contents are
 					// counted by other traversals
 					if (!(statement instanceof IASTCompoundStatement)
 							&& !(statement instanceof IASTDeclarationStatement)) {
@@ -402,17 +437,19 @@ public class CParser extends CDTParser {
 						}
 						stats.numOfStmts++;
 					}
-					if(statement instanceof CASTReturnStatement) {
-						if(! isFileLocationValid(beginLine, endLine, statement.getParent().getFileLocation())) {
+					if (statement instanceof CASTReturnStatement) {
+						if (!isFileLocationValid(beginLine, endLine,
+								statement.getParent().getFileLocation())) {
 							System.out.println(UNDISC_TYPE.RET);
 							stats.undisc_type = UNDISC_TYPE.RET;
-						}						
+						}
 					}
-					if(statement instanceof CASTCaseStatement) {
-						if(! isFileLocationValid(beginLine, endLine, statement.getParent().getFileLocation())) {
+					if (statement instanceof CASTCaseStatement) {
+						if (!isFileLocationValid(beginLine, endLine,
+								statement.getParent().getFileLocation())) {
 							System.out.println(UNDISC_TYPE.CASE);
 							stats.undisc_type = UNDISC_TYPE.CASE;
-						}						
+						}
 					}
 				}
 				return ASTVisitor.PROCESS_CONTINUE;
@@ -433,12 +470,12 @@ public class CParser extends CDTParser {
 	 *             in case line numbers are invalid
 	 * @see {@link CParser#checkLineNumberInterval}
 	 */
-	private void countExpressionInbetween(final int beginLine, final int endLine)
-			throws Exception {
+	private void countExpressionInbetween(final int beginLine,
+			final int endLine) throws Exception {
 		checkLineNumberInterval(beginLine, endLine);
 		if (debug) {
-			System.out.println(String.format("EXPRS (%d,%d):", beginLine,
-					endLine));
+			System.out.println(
+					String.format("EXPRS (%d,%d):", beginLine, endLine));
 		}
 		ASTVisitor expression = new ASTVisitor() {
 			{
@@ -454,8 +491,8 @@ public class CParser extends CDTParser {
 					if (debug) {
 						System.out.println(String.format("\t|-(%d:%d) %s",
 								fileLocation.getStartingLineNumber(),
-								fileLocation.getEndingLineNumber(), expression
-										.getClass().getSimpleName()));
+								fileLocation.getEndingLineNumber(),
+								expression.getClass().getSimpleName()));
 					}
 					stats.numOfExprs++;
 				}
@@ -465,12 +502,11 @@ public class CParser extends CDTParser {
 		};
 		translationUnit.accept(expression);
 	}
-	
+
 	/**
-	 * Count all Funcalls within given closed line number interval.
-	 * This could be basically be done while expression counting but
-	 * since we are only interested in top level exprs nested calls
-	 * would not be discovered! 
+	 * Count all Funcalls within given closed line number interval. This could
+	 * be basically be done while expression counting but since we are only
+	 * interested in top level exprs nested calls would not be discovered!
 	 * 
 	 * @param beginLine
 	 *            lower line number bound (excluded)
@@ -484,8 +520,8 @@ public class CParser extends CDTParser {
 			throws Exception {
 		checkLineNumberInterval(beginLine, endLine);
 		if (debug) {
-			System.out.println(String.format("FUNCALLS (%d,%d):", beginLine,
-					endLine));
+			System.out.println(
+					String.format("FUNCALLS (%d,%d):", beginLine, endLine));
 		}
 		ASTVisitor expression = new ASTVisitor() {
 			{
@@ -500,12 +536,13 @@ public class CParser extends CDTParser {
 					if (debug) {
 						System.out.println(String.format("\t|-(%d:%d) %s",
 								fileLocation.getStartingLineNumber(),
-								fileLocation.getEndingLineNumber(), expression
-										.getClass().getSimpleName()));
+								fileLocation.getEndingLineNumber(),
+								expression.getClass().getSimpleName()));
 					}
 					stats.numOfFuncalls++;
 				}
-				// funcalls are the only kind of exprs we are "deeply" interested in 
+				// funcalls are the only kind of exprs we are "deeply"
+				// interested in
 				return ASTVisitor.PROCESS_CONTINUE;
 			}
 		};
@@ -551,8 +588,8 @@ public class CParser extends CDTParser {
 					+ ") has to be a natural number!");
 		}
 		if (endLine < 0) {
-			throw new Exception("End line (" + endLine
-					+ ") has to be a natural number!");
+			throw new Exception(
+					"End line (" + endLine + ") has to be a natural number!");
 		}
 		if (beginLine >= endLine) {
 			throw new Exception("Begin line (" + beginLine
@@ -605,6 +642,7 @@ public class CParser extends CDTParser {
 			}
 		}
 	}
+
 	private void createHeuristics() {
 		stats.calcEncapsulationRatio();
 		stats.calcPhysicalSeparationPotential();

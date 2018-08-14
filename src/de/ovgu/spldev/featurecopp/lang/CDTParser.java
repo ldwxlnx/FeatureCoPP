@@ -69,7 +69,17 @@ public abstract class CDTParser {
 	}
 
 	public static class Stats {
-		public enum UNDISC_TYPE { NONE, RET, PARAM, CASE,  GOTO };
+		public static enum UNDISC_TYPE { 
+			NONE(1),
+			RET(2),
+			PARAM(4),
+			CASE(8),
+			GOTO(16);
+			private int value;
+			private UNDISC_TYPE(int value) {
+				this.value = value;
+			}
+		};
 		public static enum RANK {
 			FUNCDEF(6),
 			STRUCTDECL(5),
