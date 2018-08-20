@@ -43,10 +43,21 @@ int s() {
 	return 1;
 }
 #endif
+// formal parameters
 void t(int x
 #ifdef HAVE_A
 , int y, int z
 #endif
 ) {
 	
+}
+
+int foo(int x) {
+   HERE:
+   	x++;
+     if(x & 1) {
+#ifdef HAVE_A
+     	goto HERE;
+#endif
+     }
 }

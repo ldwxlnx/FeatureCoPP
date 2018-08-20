@@ -34,6 +34,7 @@ import org.eclipse.cdt.core.dom.ast.IFunction;
 import org.eclipse.cdt.core.dom.ast.IVariable;
 import org.eclipse.cdt.core.dom.ast.gnu.c.GCCLanguage;
 import org.eclipse.cdt.internal.core.dom.parser.c.CASTCaseStatement;
+import org.eclipse.cdt.internal.core.dom.parser.c.CASTGotoStatement;
 import org.eclipse.cdt.internal.core.dom.parser.c.CASTParameterDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.c.CASTReturnStatement;
 import org.eclipse.cdt.internal.core.dom.rewrite.commenthandler.ASTCommenter;
@@ -220,8 +221,7 @@ public class CParser extends CDTParser {
 				// undisciplined
 				if (isFileLocationValid(beginLine, endLine, fileLocation)
 						&& !isFileLocationValid(beginLine, endLine,
-								paramDecl.getParent().getFileLocation())) {
-					System.out.println(UNDISC_TYPE.PARAM);
+								paramDecl.getParent().getFileLocation())) {					
 					stats.undisc_type = UNDISC_TYPE.PARAM;
 				}
 				return ASTVisitor.PROCESS_CONTINUE;
@@ -439,16 +439,20 @@ public class CParser extends CDTParser {
 					}
 					if (statement instanceof CASTReturnStatement) {
 						if (!isFileLocationValid(beginLine, endLine,
-								statement.getParent().getFileLocation())) {
-							System.out.println(UNDISC_TYPE.RET);
+								statement.getParent().getFileLocation())) {							
 							stats.undisc_type = UNDISC_TYPE.RET;
 						}
 					}
 					if (statement instanceof CASTCaseStatement) {
 						if (!isFileLocationValid(beginLine, endLine,
-								statement.getParent().getFileLocation())) {
-							System.out.println(UNDISC_TYPE.CASE);
+								statement.getParent().getFileLocation())) {							
 							stats.undisc_type = UNDISC_TYPE.CASE;
+						}
+					}
+					if (statement instanceof CASTGotoStatement) {
+						if (!isFileLocationValid(beginLine, endLine,
+								statement.getParent().getFileLocation())) {							
+							stats.undisc_type = UNDISC_TYPE.GOTO;
 						}
 					}
 				}
