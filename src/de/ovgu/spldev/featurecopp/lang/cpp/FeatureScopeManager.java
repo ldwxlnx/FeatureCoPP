@@ -63,9 +63,6 @@ public class FeatureScopeManager {
 			strm.println();
 		}
 	}
-	public ObjMacroHistogram getObjMacroHistogram() {
-		return exprParseDrv.getObjMacroHistogramProj();
-	}
 
 	/**
 	 * Total stack size (basefile + siblings groups)

@@ -108,7 +108,7 @@ parser code {:
 	public void insertObjMacroExpr(String macro) {
 		objMacroHistogramExpr.insert(macro);
 	}
-	public ObjMacroHistogram getObjMacroHistogramProj() {
+	public static ObjMacroHistogram getObjMacroHistogramProj() {
 		return objMacroHistogramProj;
 	}
 	public ObjMacroHistogram getObjMacroHistogramExpr() {

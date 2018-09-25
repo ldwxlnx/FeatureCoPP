@@ -123,7 +123,8 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	}
 
 	public void writeXmlTo(int indent, FileWriter fw) throws Exception {
-		if (fw != null) {
+		if (fw != null) {			
+			
 			// calculate average and deviation and obtain number of dead features (what the f*** is single responsibility? xD)
 			int numOfDeadFeatures = Configuration.SKIP_ANALYSIS ? -1 : genCommonStats();
 			// @formatter:off

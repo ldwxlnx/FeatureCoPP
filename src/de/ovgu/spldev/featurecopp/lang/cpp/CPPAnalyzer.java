@@ -230,8 +230,8 @@ public final class CPPAnalyzer implements Processable {
 					+ (IfTree.count + IfdefTree.count + IfndefTree.count));
 			logger.writeInfo("#elif=" + ElifTree.count);
 			logger.writeInfo("#else=" + ElseTree.count);
-			logger.writeInfo("#endif=" + endifCount);
-			ObjMacroHistogram objMacroHistogram = featureScopeManager.getObjMacroHistogram();
+			logger.writeInfo("#endif=" + endifCount);			
+			ObjMacroHistogram objMacroHistogram = ExpressionParser.getObjMacroHistogramProj();
 			logger.writeInfo("SD=" + objMacroHistogram.toString());
 			logger.writeInfo("SD_max=" + objMacroHistogram.getMostScatteredObjMacro());
 			logger.writeInfo("SD_total="+ objMacroHistogram.getTotalObjMacroCount());
