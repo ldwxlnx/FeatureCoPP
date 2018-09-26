@@ -80,29 +80,14 @@ public abstract class CDTParser {
 				this.value = value;
 			}
 		};
-		public static enum RANK {
-			FUNCDEF(6),
-			STRUCTDECL(5),
-			FUNCDECL(4),
-			VARDECL(3),
-			STMTS(2),
-			COMM(1);
-			private int value;
-			private RANK(int value) {				
-				this.value = value;
-			}
-		};
-		public static final double[] RANK_VEC = { RANK.FUNCDEF.value, RANK.STRUCTDECL.value, RANK.FUNCDECL.value, RANK.VARDECL.value, RANK.STMTS.value, RANK.COMM.value };
-		public static final double RANK_NORM = Stats.euclideanNorm(RANK_VEC); 
 		@Override
 		public String toString() {			
 			return String
 					.format(Locale.US,
-							"PSPOT=\"%.2f\" CS=\"%.2f\" ER=\"%.2f\" funcdefs=\"%.1f\" totaldecls=\"%.1f\" funcdecls=\"%.1f\" structdecls=\"%.1f\" vardecls=\"%.1f\" "
+							"SV=\"%.2f\" ER=\"%.2f\" funcdefs=\"%.1f\" totaldecls=\"%.1f\" funcdecls=\"%.1f\" structdecls=\"%.1f\" vardecls=\"%.1f\" "
 									+ "symtotal=\"%.1f\" symbound=\"%.1f\" symunbound=\"%.1f\" stmts=\"%.1f\" "
 									+ "exprs=\"%.1f\" funcalls=\"%.1f\" cppdir=\"%.1f\" include=\"%.1f\" comments=\"%.1f\" undisc=\"%s\"",
-							physicalSeparationPotential,
-							comprehensibiltySupport,
+							syntacticalVolume,
 							encapsulationRatio,
 							numOfFuncDefs, numOfTotalDecls, numOfFuncDecls,
 							numOfStructDecls, numOfVarDecls,
@@ -110,26 +95,6 @@ public abstract class CDTParser {
 							numOfSymbolsUnbound, numOfStmts,
 							numOfExprs, numOfFuncalls, numOfCPPDirectives,
 							numOfCPPInclude, numOfComments, undisc_type);
-		}
-		public static double calcScalarProductWithRankVector(double...elements) {
-			if(elements != null && elements.length == RANK_VEC.length) {
-				double tmp = 0;
-				for(int i = 0; i < elements.length; i++) {
-					tmp += elements[i] * RANK_VEC[i];
-				}
-				return tmp;
-			}
-			return -1;
-		}
-		public static double calcConsineSimilarityWithRankVector(double...elements) {
-			if(elements != null && elements.length == RANK_VEC.length) {
-				double scalarProduct = Stats.calcScalarProductWithRankVector(elements);
-				double norm = Stats.euclideanNorm(elements);
-				//System.out.println("n=" + norm + ";s=" + scalarProduct);
-				double cosine = scalarProduct == 0 ? 0 : scalarProduct / (norm * RANK_NORM);
-				return cosine;
-			}
-			return -1;
 		}
 		public static double euclideanNorm(double...elements) {
 			if(elements != null && elements.length > 0) {
@@ -186,8 +151,7 @@ public abstract class CDTParser {
 				numOfStructDecls += stats.numOfStructDecls;
 				numOfFuncalls += stats.numOfFuncalls;
 				encapsulationRatio += stats.encapsulationRatio;
-				physicalSeparationPotential += stats.physicalSeparationPotential;	
-				comprehensibiltySupport += stats.comprehensibiltySupport;
+				syntacticalVolume += stats.syntacticalVolume;
 				numOfAccumulations++;
 			}
 		}
@@ -225,10 +189,7 @@ public abstract class CDTParser {
 						avg.numOfFuncalls);
 				encapsulationRatio += deltaSquare(measurement.encapsulationRatio,
 						avg.encapsulationRatio);
-				physicalSeparationPotential += deltaSquare(measurement.physicalSeparationPotential,
-						avg.physicalSeparationPotential);
-				comprehensibiltySupport += deltaSquare(measurement.comprehensibiltySupport,
-						avg.comprehensibiltySupport);
+				syntacticalVolume += deltaSquare(measurement.syntacticalVolume, avg.syntacticalVolume);
 				numOfAccumulations++;
 			}
 		}
@@ -250,8 +211,7 @@ public abstract class CDTParser {
 				numOfStructDecls /= numOfAccumulations;
 				numOfFuncalls /= numOfAccumulations;
 				encapsulationRatio /= numOfAccumulations;
-				physicalSeparationPotential /= numOfAccumulations;
-				comprehensibiltySupport /= numOfAccumulations;
+				syntacticalVolume /= numOfAccumulations;
 			}
 		}
 
@@ -271,18 +231,16 @@ public abstract class CDTParser {
 			numOfStructDecls = Math.sqrt(numOfStructDecls);
 			numOfFuncalls = Math.sqrt(numOfFuncalls);
 			encapsulationRatio = Math.sqrt(encapsulationRatio);
-			physicalSeparationPotential = Math.sqrt(physicalSeparationPotential);
-			comprehensibiltySupport = Math.sqrt(comprehensibiltySupport);
+			syntacticalVolume = Math.sqrt(syntacticalVolume);
 		}
 		public void calcEncapsulationRatio() {
 			double symTotal = numOfSymbolsBound + numOfSymbolsUnbound;
 			encapsulationRatio = symTotal == 0 ? 0
 					: numOfSymbolsBound / symTotal;
 		}
-		public void calcPhysicalSeparationPotential() {
-			comprehensibiltySupport = Stats.calcConsineSimilarityWithRankVector(numOfFuncDefs, numOfStructDecls, numOfFuncDecls, numOfVarDecls, numOfStmts, numOfComments);
-			// results in n in [0,2], where values below 1 are weaker and above 1 are stronger candidates for physical separation
-			physicalSeparationPotential = comprehensibiltySupport + encapsulationRatio;
+		
+		public void calcSyntacticalVolume() {
+			syntacticalVolume = Stats.euclideanNorm(numOfFuncDefs, numOfStructDecls, numOfFuncDecls, numOfVarDecls, numOfStmts, numOfExprs, numOfComments);
 		}
 
 		private double deltaSquare(double measurement, double avg) {
@@ -321,10 +279,12 @@ public abstract class CDTParser {
 		protected double numOfAccumulations;
 		/** relation of declared to existing symbols in portion */
 		protected double encapsulationRatio;
-		/** metric indicating usefulness to physically separate a code portion */
-		protected double physicalSeparationPotential;
-		/** cosine similarity regarding all types of weighted declarations */
-		protected double comprehensibiltySupport;
+//		/** metric indicating usefulness to physically separate a code portion */
+//		protected double physicalSeparationPotential;
+//		/** cosine similarity regarding all types of weighted declarations */
+//		protected double comprehensibiltySupport;
+		/** euclidean norm of amounts of syntactic entities*/
+		protected double syntacticalVolume;
 		protected HashMap<IBinding, IASTName> bindingMap;
 		protected HashMap<IBinding, IASTName> symbols;
 		protected UNDISC_TYPE undisc_type = UNDISC_TYPE.NONE;

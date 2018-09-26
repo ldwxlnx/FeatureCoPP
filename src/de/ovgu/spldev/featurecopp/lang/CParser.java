@@ -649,7 +649,8 @@ public class CParser extends CDTParser {
 
 	private void createHeuristics() {
 		stats.calcEncapsulationRatio();
-		stats.calcPhysicalSeparationPotential();
+		//stats.calcPhysicalSeparationPotential();
+		stats.calcSyntacticalVolume();
 	}
 
 	/**
