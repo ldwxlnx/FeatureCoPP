@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -44,7 +45,7 @@ public class FeatureTable {
 	public static void writeXmlTo(int indent, FileWriter fw) throws Exception {
 		if (fw != null) {
 			// @formatter:off
-			fw.write(String.format("%" + indent + "s<features count=\"%d\" requested=\"%d\" roles=\"%d\">%s", // linebreak
+			fw.write(String.format(Locale.US, "%" + indent + "s<features count=\"%d\" requested=\"%d\" roles=\"%d\">%s", // linebreak
 					Configuration.XML_INDENT_WHITESPACE, getFeatureCount(), calcNumberOfRequestedFeatures(), calcTotalNumberOfRoles(), Configuration.LINE_SEPARATOR));
 			// pretty expensive but xml analysis for humans is easier with some kind of order
 			// -> see FeatureModule.compare
@@ -54,7 +55,7 @@ public class FeatureTable {
 				FeatureModule fm = (FeatureModule)o;
 				fm.writeXmlTo(indent + 1, fw);
 			}
-			fw.write(String.format("%" + indent + "s</features>%s", // linebreak
+			fw.write(String.format(Locale.US, "%" + indent + "s</features>%s", // linebreak
 					Configuration.XML_INDENT_WHITESPACE, Configuration.LINE_SEPARATOR));
 			// @formatter:on
 		}

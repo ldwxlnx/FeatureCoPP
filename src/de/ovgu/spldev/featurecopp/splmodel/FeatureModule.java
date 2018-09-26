@@ -8,6 +8,7 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
 
@@ -124,19 +125,26 @@ public class FeatureModule implements Comparable<FeatureModule> {
 
 	public void writeXmlTo(int indent, FileWriter fw) throws Exception {
 		if (fw != null) {			
-			
+			double nd_sum = 0;
+			double nd_n = featureOccurrences.size();
+			for(int i = 0; i < nd_n; i++) {
+				nd_sum += featureOccurrences.get(i).nestingDepth;
+			}
+			double nd_avg = nd_sum / nd_n;
 			// calculate average and deviation and obtain number of dead features (what the f*** is single responsibility? xD)
 			int numOfDeadFeatures = Configuration.SKIP_ANALYSIS ? -1 : genCommonStats();
 			// @formatter:off
-			fw.write(String.format("%" + indent + "s<feature uid=\"%d\""
+			fw.write(String.format(Locale.US, "%" + indent + "s<feature uid=\"%d\""
 					+ " file=\"%s\"" + " requested=\"%b\">%s" // linebreak
 					+ "%" + (indent + 1) + "s<expr><![CDATA[%s]]></expr>%s" // linebreak
 					+ "%" + (indent + 1) + "s<td>%d</td>%s"
+					+ "%" + (indent + 1) + "s<ndavg>%.3f</ndavg>%s"
 					+ "%s" // statistic section or empty
 					+ "%" + (indent + 1) + "s<occs count=\"%d\" dead=\"%d\" valid=\"%d\">%s", // linebreak
 					Configuration.XML_INDENT_WHITESPACE, uid, isRequested ? featureModuleFile : "", isRequested, Configuration.LINE_SEPARATOR,
 					Configuration.XML_INDENT_WHITESPACE, featureTreeToString(), Configuration.LINE_SEPARATOR,
 					Configuration.XML_INDENT_WHITESPACE, featureExprAST.getTDMap().getTotalObjMacroCount(), Configuration.LINE_SEPARATOR,
+					Configuration.XML_INDENT_WHITESPACE, nd_avg, Configuration.LINE_SEPARATOR,
 					// no analysis performed -> no statistics to display
 					Configuration.SKIP_ANALYSIS ? "" : String.format("%" + (indent + 1) + "s<sem_avg %s />%s"
 							+ "%" + (indent + 1) + "s<sem_dev %s />%s", 
