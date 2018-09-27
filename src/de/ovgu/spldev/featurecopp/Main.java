@@ -37,7 +37,7 @@ public class Main {
 	public static void usage() {
 		// TODO if more complex, use cli-arg-parser lib
 		// @formatter:off
-		System.out.println("usage: java -jar " + Configuration.APPLICATION_NAME + ".jar --(a)split[inputdir][expr-regex]|--merge[inputdir]|[--report]|[-areport]|[--help]");
+		System.out.println("usage: java -jar " + Configuration.APPLICATION_NAME + ".jar --(a)split[inputdir][expr-regex][sd-regex]|--merge[inputdir]|[--report]|[-areport]|[--help]");
 		System.out.println("--help:  shows this screen");
 		System.out.println("--split: extracts preprocessor controlled code of conditional directives from all files within");
 		System.out.println("--asplit: behaves like --split but performs additional statistical syntax analysis of controlled code");
@@ -48,6 +48,7 @@ public class Main {
 				+ Configuration.MODULE_DIR + "'" + File.separator
 				+ Configuration.XML_REPORT_FILE);
 		System.out.println("\t'expr-regex': denotes a java regex which should match a class of feature expressions.");
+		System.out.println("\t'sd-regex': denotes a java regex which should match a class of feature expressions based on scattering degree (basically macro name without e.g., defined).");
 		System.out.println("\t\tdefault: .* (all found feature expressions)");
 		System.out.println("\t\texample: .*CONFIG_.* finds all expression containing macro CONFIG pre- and succeeded by arbitrary symbols.");
 		System.out.println("\t\texample: #else.* finds all expression containing #else-directives succeeded by arbitrary symbols.");
@@ -67,7 +68,7 @@ public class Main {
 	}
 
 	public static void split(final Path inputDir,
-			final Pattern requestExprPattern) {
+			final Pattern requestExprPattern, final Pattern sdPattern) {
 		try {
 			PrintStream logfile = new PrintStream(Configuration.SPLIT_LOGFILE);
 			Logger logger = new Logger();
@@ -103,8 +104,9 @@ public class Main {
 			logger.writeInfo("Directory=" + inputDir.toString());
 			logger.writeInfo("File pattern=" + Configuration.FIND_GLOB_PATTERN);
 			logger.writeInfo("Feature pattern=" + requestExprPattern);
+			logger.writeInfo("SD pattern=" + sdPattern);
 			CPPAnalyzer cppAnalyzer = new CPPAnalyzer(logger, inputDir,
-					outputDir, moduleDir, requestExprPattern);
+					outputDir, moduleDir, requestExprPattern, sdPattern);
 			long start = Time.getCurrentNanoSecs();
 			// ...and re-create (potentially empty, if nothing processed)
 			try {
@@ -267,10 +269,14 @@ public class Main {
 			case "--split": { // split without analysis (cheap)
 				// default is all feature expressions
 				Pattern searchPattern = Pattern.compile(".*");
-				if (args.length == 3) {
+				Pattern sdPattern = Pattern.compile(".*"); // to simulate sd detection
+				if (args.length >= 3) {
 					searchPattern = Pattern.compile(args[2]);
 				}
-				split(inputDir, searchPattern);
+				if (args.length == 4) {
+					sdPattern = Pattern.compile(args[3]);
+				}
+				split(inputDir, searchPattern, sdPattern);
 				break;
 			}
 			case "--merge":

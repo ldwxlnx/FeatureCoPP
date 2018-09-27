@@ -64,7 +64,7 @@ parser code {:
 			this.requestPattern = requestPattern;
 		}
 		public void insert(String macro) {
-			// insert only requested macro names
+			// insert only requested macro names (sd_pattern)
 			if (requestPattern.matcher(macro).matches()) {			
 				Integer count = objMacroHistogram.get(macro);
 				// macro not previously detected?

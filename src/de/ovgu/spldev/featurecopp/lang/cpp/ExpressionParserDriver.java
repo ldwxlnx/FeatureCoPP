@@ -17,12 +17,12 @@ public final class ExpressionParserDriver {
 		lexer = new ExpressionLexer();
 		parser = new ExpressionParser(lexer);			
 	}
-	public FeatureTree run(boolean showLexerOutput, final String cpp_directive, final Pattern requestPattern) throws Exception {
+	public FeatureTree run(boolean showLexerOutput, final String cpp_directive, final Pattern sdPattern) throws Exception {
 		lexer.debug(showLexerOutput);
 		if(currReader != null) {
 			currReader.close();
 		}
-		parser.setRequestPatternProj(requestPattern);
+		parser.setRequestPatternProj(sdPattern);
 		currReader = new StringReader(cpp_directive);
 		lexer.yyreset(currReader);
 		FeatureTree ftree = (FeatureTree)parser.parse().value;
@@ -33,7 +33,7 @@ public final class ExpressionParserDriver {
 		return ftree;
 	}
 	public ObjMacroHistogram getObjMacroHistogramProj() {
-		return parser.getObjMacroHistogramProj();
+		return ExpressionParser.getObjMacroHistogramProj();
 	}
 	/** generated parser */
 	private ExpressionParser parser;
