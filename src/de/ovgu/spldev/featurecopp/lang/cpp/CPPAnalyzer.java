@@ -83,11 +83,10 @@ public final class CPPAnalyzer implements Processable {
 		this.logger = logger;
 		this.inputDir = inputDir;
 		this.outputDir = outputDir;
-		this.featureScopeManager = new FeatureScopeManager(moduleDir, logger);
+		this.featureScopeManager = new FeatureScopeManager(moduleDir, logger, sdPattern);
 		this.cppScanner = new CPPScanner();
 		this.cppScanner.debug(false);
 		this.requestExprPattern = requestExprPattern;
-		this.sdPattern = sdPattern;
 	}
 
 	public void scan(boolean showLexerOutput, final Path currentFile)
@@ -142,7 +141,7 @@ public final class CPPAnalyzer implements Processable {
 								.toString());
 					}
 					// maintain a new scope
-					featureScopeManager.addIfElif(sdPattern,
+					featureScopeManager.addIfElif(requestExprPattern,
 							condExpr, sym.line, sym.type);
 					break;
 				}
@@ -323,6 +322,4 @@ public final class CPPAnalyzer implements Processable {
 	private Path outputDir;
 	/** a regular expression describing feature expression to get honored */
 	private Pattern requestExprPattern;
-	/** a regular expression to simulate sd detection */
-	private Pattern sdPattern;
 }
