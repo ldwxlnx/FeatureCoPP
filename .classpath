@@ -21,5 +21,6 @@
 	<classpathentry kind="lib" path="lib/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.equinox.registry_3.5.301.v20130717-1549.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.osgi_3.9.1.v20140110-1610.jar"/>
+	<classpathentry kind="lib" path="lib/com.ibm.icu_50.1.1.v201304230130.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
