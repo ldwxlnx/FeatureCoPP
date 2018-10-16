@@ -49,6 +49,15 @@ parser code {:
 		public String toString() {
 			return sortDesc().toString();
 		}
+		public boolean contains(Pattern pattern) {
+			for(String key : objMacroHistogram.keySet()) {
+				// first found is sufficient
+				if(pattern.matcher(key).matches()) {
+					return true;
+				}
+			}
+			return false;
+		}
 		// needed for else td-maps, when all sibling maps/tds are consolidated into one else
 		public void merge(ObjMacroHistogram src) {
 			objMacroHistogram.putAll(src.objMacroHistogram);

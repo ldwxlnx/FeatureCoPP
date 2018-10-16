@@ -3,6 +3,7 @@ package de.ovgu.spldev.featurecopp.splmodel;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.regex.Pattern;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
@@ -46,9 +47,16 @@ public class FeatureTree {
 		return root.toString();
 	}
 	
-//	public void setTanglingDegree(int tangling_degree) {
-//		this.tangling_degree = tangling_degree;
-//	}
+	/**
+	 * Tests, if at least one object macro exists within this tree, which matches given pattern.
+	 * Operation stops after finding the first match.
+	 * @param pattern regex pattern
+	 * @return true for first found match, false otherwise
+	 */
+	public boolean containsObjMacro(Pattern pattern) {
+		return tdMap.contains(pattern);
+	}
+	
 	public void setTDMap(ExpressionParser.ObjMacroHistogram tdMap) {
 		this.tdMap = tdMap;
 	}
