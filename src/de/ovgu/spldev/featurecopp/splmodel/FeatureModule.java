@@ -540,6 +540,8 @@ public class FeatureModule implements Comparable<FeatureModule> {
 							+ macroSettings.macroSettings.toString());
 				}
 			}
+			// TODO remove
+			//System.out.println(ftree.featureExprToString() + " => " + conjunctiveExpr.featureExprToString() + " => " + macroSettings.macroSettings);
 			// deliver newly created/cached macro settings
 			return macroSettings.macroSettings;
 		}
@@ -547,9 +549,8 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		private static synchronized long nextUID() {
 			return ++occ_uid_count;
 		}
-
 		private static long occ_uid_count;
-		/** id of this occurence */
+		/** id of this occurrence */
 		private long occ_uid;
 		/** source file where feature occurred */
 		private String filename;

@@ -243,15 +243,17 @@ public class FeatureScopeManager {
 		FeatureModule.FeatureOccurrence currfeatureOccurrence = featureModule
 				.addOccurrence(currentOriginalSourceFile.toString(),
 						parent.getFeatureOccurrence(), lineNumber, featureTree, featureScope.size() - 1); // basefile is always on bottom, hence minus 1		
+		//TODO change to macro based request selection
 //		if(featureTree.containsObjMacro(requestPattern)) {
 //			logger.writeInfo("Y:" + featureTree);
 //		}
 //		else {
 //			logger.writeInfo("N:" + featureTree);
 //		}
-		// should conditional expression not be filtered by user request?		
+		// should conditional expression not be filtered by user request?	
+		if(!featureTree.containsObjMacro(requestPattern)) {
 		//if (!requestPattern.matcher(featureTree.toString()).matches()) {
-		if (!requestPattern.matcher(featureTree.featureExprToString()).matches()) {			
+		//if (!requestPattern.matcher(featureTree.featureExprToString()).matches()) {			
 			featureModule.unsetRequested();
 		}
 		// feature extraction requested!
@@ -350,19 +352,10 @@ public class FeatureScopeManager {
 			// not base file?
 			if (! Configuration.SKIP_ANALYSIS && featureOccurrence != null) {
 				try {
-					// TODO if feature tree evaluates to 1
-					// -> parse directly
-					// otherwise:
-					// get all macro names and values (different from 0) to
-					// create a
-					// customized parser
-
-					// TODO
-					// if not already a valid setting exists for this feature
-					// expr
-					// (save csp time)
 					HashMap<String, String> macroDefs = featureOccurrence
 							.solveCSP();
+					//TODO remove
+					//logger.writeInfo(feature.featureTreeToString() + "=>" + macroDefs);
 					// solveCSP has set dead (or "valid")
 					if (!featureOccurrence.isDeadFeature()) {
 						// analyze controlled code syntactically and
