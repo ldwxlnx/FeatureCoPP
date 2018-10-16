@@ -180,7 +180,7 @@ public class FeatureScopeManager {
 		// write back all controlled code caches
 		while (!conditional.isEmpty()) {
 			Node prevTopLeftMost = conditional.pop();
-			prevTopLeftMost.writeBackControlledCodeCache();
+			prevTopLeftMost.solveParseAndWriteBack();
 		}
 		// previous top most is now parent of parent of actual top most again
 		prevTopMost = featureScope.peek().peek().parent;
@@ -205,7 +205,7 @@ public class FeatureScopeManager {
 		// unprocessed
 		if (basefileBucket.hasDirective) {
 			// write back is wanted
-			basefileBucket.writeBackControlledCodeCache();
+			basefileBucket.solveParseAndWriteBack();
 		}
 		featureScope.clear();
 	}
@@ -339,7 +339,7 @@ public class FeatureScopeManager {
 			return type == CPPAnalyzer.TYPE.ELIF;
 		}
 
-		private void writeBackControlledCodeCache() throws IOException {
+		private void solveParseAndWriteBack() throws IOException {
 			String sourceCode = controlledCodeCache.toString();
 			// not base file?
 			if (! Configuration.SKIP_ANALYSIS && featureOccurrence != null) {
