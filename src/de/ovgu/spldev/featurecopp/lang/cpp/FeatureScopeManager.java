@@ -243,13 +243,6 @@ public class FeatureScopeManager {
 		FeatureModule.FeatureOccurrence currfeatureOccurrence = featureModule
 				.addOccurrence(currentOriginalSourceFile.toString(),
 						parent.getFeatureOccurrence(), lineNumber, featureTree, featureScope.size() - 1); // basefile is always on bottom, hence minus 1		
-		//TODO change to macro based request selection
-//		if(featureTree.containsObjMacro(requestPattern)) {
-//			logger.writeInfo("Y:" + featureTree);
-//		}
-//		else {
-//			logger.writeInfo("N:" + featureTree);
-//		}
 		// should conditional expression not be filtered by user request?	
 		if(!featureTree.containsObjMacro(requestPattern)) {
 		//if (!requestPattern.matcher(featureTree.toString()).matches()) {
