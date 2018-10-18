@@ -235,6 +235,7 @@ public final class CPPAnalyzer implements Processable {
 			logger.writeInfo("SD=" + objMacroHistogram.toString());
 			logger.writeInfo("SD_max=" + objMacroHistogram.getMostScatteredObjMacro());
 			logger.writeInfo("SD_total="+ objMacroHistogram.getTotalObjMacroCount());
+			logger.writeInfo("SD_sum=" + objMacroHistogram.accumulateValues());
 			logger.writeInfo(String.format(
 					"Processed text size (UTF-8): %d bytes (%03.3fMiB)",
 					textSize, textSize * 1.0 / (1024 * 1024)));

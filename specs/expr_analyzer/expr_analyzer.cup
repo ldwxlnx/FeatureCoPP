@@ -69,6 +69,13 @@ parser code {:
 				    .collect(Collectors.toMap(Entry::getKey, Entry::getValue,
 				                              (e1, e2) -> e1, LinkedHashMap::new));
 		}
+		public int accumulateValues() {
+			int sum = 0;
+			for(Integer i : objMacroHistogram.values()) {
+				sum += i;
+			}
+			return sum;
+		}
 		public void setRequestPattern(Pattern requestPattern) {
 			this.requestPattern = requestPattern;
 		}
