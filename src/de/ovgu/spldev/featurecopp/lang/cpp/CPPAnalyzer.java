@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import de.ovgu.spldev.featurecopp.config.Configuration;
@@ -232,10 +233,20 @@ public final class CPPAnalyzer implements Processable {
 			logger.writeInfo("#else=" + ElseTree.count);
 			logger.writeInfo("#endif=" + endifCount);			
 			ObjMacroHistogram objMacroHistogram = ExpressionParser.getObjMacroHistogramProj();
-			logger.writeInfo("SD=" + objMacroHistogram.toString());
-			logger.writeInfo("SD_max=" + objMacroHistogram.getMostScatteredObjMacro());
-			logger.writeInfo("SD_total="+ objMacroHistogram.getTotalObjMacroCount());
-			logger.writeInfo("SD_sum=" + objMacroHistogram.accumulateValues());
+			logger.writeInfo("SD_OLD=" + objMacroHistogram.toString());
+			logger.writeInfo("SD_OLD_max=" + objMacroHistogram.getMostScatteredObjMacro());
+			logger.writeInfo("SD_OLD_total="+ objMacroHistogram.getTotalObjMacroCount());
+			int sd_old_sum = objMacroHistogram.accumulateValues();
+			logger.writeInfo("SD_OLD_sum=" + sd_old_sum);
+			
+			ObjMacroHistogram objMacroHistogramInclElse = ExpressionParser.getObjMacroHistogramProjInclElse();
+			logger.writeInfo("SD_NEW=" + objMacroHistogramInclElse.toString());
+			logger.writeInfo("SD_NEW_max=" + objMacroHistogramInclElse.getMostScatteredObjMacro());
+			logger.writeInfo("SD_NEW_total="+ objMacroHistogramInclElse.getTotalObjMacroCount());
+			long sd_new_sum = objMacroHistogramInclElse.accumulateValues();
+			logger.writeInfo("SD_NEW_sum=" + sd_new_sum);
+			
+			logger.writeInfo("SD_missRatio=" + String.format(Locale.US, "%.3f", (1.0 - ((sd_old_sum * 1.0) / (sd_new_sum * 1.0)))));
 			logger.writeInfo(String.format(
 					"Processed text size (UTF-8): %d bytes (%03.3fMiB)",
 					textSize, textSize * 1.0 / (1024 * 1024)));

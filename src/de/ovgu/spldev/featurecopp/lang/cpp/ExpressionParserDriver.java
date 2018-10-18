@@ -32,6 +32,9 @@ public final class ExpressionParserDriver {
 		}
 		return ftree;
 	}
+	public void insertAndAccumulateValues(ObjMacroHistogram src) {
+		ExpressionParser.getObjMacroHistogramProjInclElse().insertAndAccumulateValues(src);
+	}
 	public ObjMacroHistogram getObjMacroHistogramProj() {
 		return ExpressionParser.getObjMacroHistogramProj();
 	}

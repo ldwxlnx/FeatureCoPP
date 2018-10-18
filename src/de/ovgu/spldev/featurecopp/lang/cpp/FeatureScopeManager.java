@@ -8,6 +8,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Stack;
 import java.util.regex.Pattern;
+import java.util.Map.Entry;
 
 import de.ovgu.spldev.featurecopp.config.Configuration;
 import de.ovgu.spldev.featurecopp.lang.CDTParser;
@@ -541,6 +542,9 @@ public class FeatureScopeManager {
 		}
 		ftree.setKeyword("#else");
 		ftree.setTDMap(tdMap);
+		
+		exprParseDrv.insertAndAccumulateValues(tdMap);
+		
 		return ftree;
 	}
 
