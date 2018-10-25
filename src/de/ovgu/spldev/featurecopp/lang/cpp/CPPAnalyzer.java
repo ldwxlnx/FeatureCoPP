@@ -80,11 +80,11 @@ public final class CPPAnalyzer implements Processable {
 
 	public CPPAnalyzer(Logger logger, final Path inputDir,
 			final Path outputDir, final Path moduleDir,
-			final Pattern requestExprPattern, final Pattern sdPattern) {
+			final Pattern requestExprPattern) {
 		this.logger = logger;
 		this.inputDir = inputDir;
 		this.outputDir = outputDir;
-		this.featureScopeManager = new FeatureScopeManager(moduleDir, logger, sdPattern);
+		this.featureScopeManager = new FeatureScopeManager(moduleDir, logger, requestExprPattern);
 		this.cppScanner = new CPPScanner();
 		this.cppScanner.debug(false);
 		this.requestExprPattern = requestExprPattern;

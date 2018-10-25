@@ -3,9 +3,10 @@
   <mode> ::= --report | --areport | --split | --asplit | --merge-scripts
   <inputdir> ::= relative or absolute path to c project (symlinks are ignored!)
 		- default: current working directory
-  <regex> ::= java regular expression (e.g., ".*" matches all constExpr, ".*CONFIG_.*" matches all constExpr containing CONFIG_ somewhere)
+  <regex> ::= java regular expression (e.g., '.*' matches all constExpr, "CONFIG_\w+" matches all constExpr containing CONFIG_ somewhere)
 		NOTA BENE:
-		- default: ".*"
+		- default: '.*'
+		- quote .* by '.*' to prevent from accidental directory expansion of some shells
 		- Quote special regex characters if needed literally!
 		- Enclose pathnames and patterns containing whitespace (who does that?;-) in double quotes ""!
   

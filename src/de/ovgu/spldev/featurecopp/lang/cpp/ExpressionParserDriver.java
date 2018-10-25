@@ -17,12 +17,12 @@ public final class ExpressionParserDriver {
 		lexer = new ExpressionLexer();
 		parser = new ExpressionParser(lexer);			
 	}
-	public FeatureTree run(boolean showLexerOutput, final String cpp_directive, final Pattern sdPattern) throws Exception {
+	public FeatureTree run(boolean showLexerOutput, final String cpp_directive, final Pattern requestPattern) throws Exception {
 		lexer.debug(showLexerOutput);
 		if(currReader != null) {
 			currReader.close();
 		}
-		parser.setRequestPatternProj(sdPattern);
+		parser.setRequestPatternProj(requestPattern);
 		currReader = new StringReader(cpp_directive);
 		lexer.yyreset(currReader);
 		FeatureTree ftree = (FeatureTree)parser.parse().value;

@@ -16,4 +16,4 @@ if [ ! -d "$1" ]; then
 fi
 
 
-java -jar FeatureCoPP.jar --asplit "$1" ".*"
+java -jar FeatureCoPP.jar --asplit "$1" '.*'

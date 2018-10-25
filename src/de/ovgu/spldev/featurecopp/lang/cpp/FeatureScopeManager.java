@@ -29,12 +29,12 @@ public class FeatureScopeManager {
 		ast_strm = new PrintStream(astLogfile);
 	}
 
-	public FeatureScopeManager(final Path moduleDir, Logger logger, Pattern sdPattern) {
+	public FeatureScopeManager(final Path moduleDir, Logger logger, Pattern requestPattern) {
 		this.exprParseDrv = new ExpressionParserDriver();
 		this.moduleDir = moduleDir;
 		this.featureScope = new Stack<Stack<Node>>();
 		this.logger = logger;
-		this.sdPattern = sdPattern;
+		this.requestPattern = requestPattern;
 	}
 
 	public void addBasefile(final Path currentSourceFile) {
@@ -559,7 +559,7 @@ public class FeatureScopeManager {
 	 */
 	private FeatureTree parseConditionalExpression(final String conditionalExpr)
 			throws Exception {
-		return exprParseDrv.run(false, conditionalExpr, sdPattern);
+		return exprParseDrv.run(false, conditionalExpr, requestPattern);
 	}
 
 	private static PrintStream ast_strm;
@@ -584,5 +584,5 @@ public class FeatureScopeManager {
 	/** log writer (1 per run), same as in CPPAnalyzer */
 	private Logger logger;
 	/** a regular expression to simulate sd detection */
-	private Pattern sdPattern;
+	private Pattern requestPattern;
 }
