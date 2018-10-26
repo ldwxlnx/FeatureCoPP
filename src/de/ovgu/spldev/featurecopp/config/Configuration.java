@@ -1,6 +1,7 @@
 package de.ovgu.spldev.featurecopp.config;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -43,7 +44,11 @@ public class Configuration {
 	 * TODO blacklist file, editable by user*/
 	private static HashMap<Path, String> BLACKLIST = new HashMap<Path, String>();
 	public static final void readBlacklist(Logger logger) throws Exception {
-		BufferedReader br = new BufferedReader(new FileReader(BLACKLIST_FILE));
+		File blFile = new File(BLACKLIST_FILE);
+		if(! blFile.isFile()) {
+			return;
+		}
+		BufferedReader br = new BufferedReader(new FileReader(blFile));
 		String line = null;
 		while((line = br.readLine()) != null) {
 			// ignore comments
