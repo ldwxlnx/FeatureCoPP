@@ -632,6 +632,11 @@ public class FeatureTree {
 			super(left, right, symbol);
 			// since we have (hexa-)decimal or octal input (maybe greater than
 			// 32bit)
+			// UuLl suffixes?
+			if(symbol.matches(".*[UuLl]+.*")) {
+				// remove character portion - we have to handle as signed long anyway 
+				symbol = symbol.replaceAll("[LlUu]", "");
+			}
 			value = Long.decode(symbol);
 		}
 
@@ -657,6 +662,7 @@ public class FeatureTree {
 	public static class CharLiteral extends Node {
 		public CharLiteral(Node left, Node right, String symbol) {
 			super(left, right, symbol);
+			System.out.println(symbol + ":" + symbol.length());
 			// multibytes rejected by lexer
 			// escape sequences e.g. '\t'
 			if (symbol.length() == 4) {
@@ -691,6 +697,7 @@ public class FeatureTree {
 				case "'\\\\'": // '\\'
 					value = 92;
 					break;
+					// TODO all new escape sequences
 				default:
 					// should never happen
 					break;

@@ -269,9 +269,9 @@ public class Main {
 			case "--split": { // split without analysis (cheap)
 				// default is all feature expressions
 				Pattern searchPattern = Pattern.compile(".*");
-				// since eclipse expands ".*" as argument to cwd resulting in a list of entries (.e.g., .classpath, .settings,...) -> strange		
-				// user 
-				if (args.length >= 3 && ! searchPattern.matcher(args[2]).matches()) {
+				// was search pattern submitted and differs from default
+				// -> since eclipse shell expands ".*" as argument to cwd resulting in a list of entries (.e.g., .classpath, .settings,...) -> strange				
+				if (args.length >= 3 && ! searchPattern.toString().equals(args[2])) {					
 					searchPattern = Pattern.compile(args[2]);
 				}
 				split(inputDir, searchPattern);

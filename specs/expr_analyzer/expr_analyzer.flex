@@ -116,26 +116,43 @@ funmac_arg_namespace = [A-Za-z0-9_::]+
 // e.g. #if __has_include__ "complex.h"
 funmac_no_parentheses = {identifier}\s+({funmac_arg_glob_header}|{funmac_arg_loc_header})
 
+//char_lit = '[A-Za-z0-9]'|'[\[\]\"#\{\}()\!\$@%&/=\?`\*\+\~,;\.:\-_<>\|\^ ]'|
+//	'\\0'| {escapeSequence}
+/****** CHARACTERS
+ C11 n1570 §6.4.4.4, p. 67
+ **************************/
+character_constant = [LuU]?'{c_char_sequence}'	
+c_char_sequence = {c_char}
+c_char = [A-Za-z0-9] | [\[\]\"#\{\}()\!\$@%&/=\?`\*\+\~,;\.:\-_<>\|\^ ] | {escapeSequence} 
+escapeSequence = {simpleEscapeSequence} | {octalEscapeSequence} | {hexadecimalEscapeSequence}
+simpleEscapeSequence = \\0 | \\' | \\\" | \\? | \\\\ | \\a | \\b | \\f | \\n | \\r | \\t | \\v
+octalEscapeSequence = \\{octal_digit}{1,3}
+hexadecimalEscapeSequence = \\x{hexadecimal_digit}*	
 
-/* A character literal is a single letter enclosed by single-quotes.
-   We ignore whole ascii-set for simplicity now.
-   Add further ascii-symbols here if needed
-   Quotes are needed to distinguish from 'id'(entifier)-class.
-   Note the SPACE as last character within last brackets [], allowing
-   us to write e.g. i := ' '; (meaning: 0x20{1})!
-   - and " need to be quoted
- */
-char_lit = '[A-Za-z0-9]'|'[\[\]#\{\}()\!\"\$@%&/=\?`\*\+\~,;\.:\-_<>\|\^ ]'|
-	'\\0'|'\\a'|'\\b'|'\\t'|'\\n'|'\\v'|'\\f'|'\\r'|'\\''|'\\\\'
-	
-	
-/* see: http://en.cppreference.com/w/cpp/language/integer_literal */
-//TODO suffixes and intermediate '
-dec_nat_lit = 0 | [1-9][0-9]*
-hex_nat_lit = 0(x|X)[0-9a-fA-F]+
-oct_nat_lit = 0[0-7]+
-bin_nat_lit = 0(b|B)[0-1]+
-int_lit = ({dec_nat_lit} | {hex_nat_lit} | {oct_nat_lit} | {bin_nat_lit})
+/****** INTEGERS
+ C11 n1570 §6.4.4.1, p. 62
+ see also: http://en.cppreference.com/w/cpp/language/integer_literal
+ TODO: C++14 "Optional single quotes(') may be inserted between the digits as a separator. They are ignored by the compiler."
+ **************************/
+ integer_constant = ({binary_constant}|{decimal_constant}|{octal_constant}|{hexadecimal_constant}){integer_suffix}?
+ /**** SUFFIXES ****/
+ integer_suffix = {unsigned_suffix}({long_suffix}|{long_long_suffix})? | ({long_suffix}|{long_long_suffix}){long_suffix}?
+ unsigned_suffix = [uU]
+ long_suffix = [lL]
+ long_long_suffix = ll | LL
+ /**** DECIMAL ****/
+ decimal_constant = 0 | [1-9][0-9]*
+/**** HEXADECIMAL ****/
+hexadecimal_constant = {hexadecimal_prefix}{hexadecimal_digit}*
+hexadecimal_prefix = 0(x|X)
+hexadecimal_digit = [0-9a-fA-F]
+/**** OCTAL *****/
+octal_constant = 0{octal_digit}*
+octal_digit = [0-7]
+/**** BINARY CXX14 ****/
+binary_constant = {binary_prefix}{binary_digit}+
+binary_prefix = 0(b|B)
+binary_digit = [0-1]
 
 %%
 
@@ -326,13 +343,13 @@ int_lit = ({dec_nat_lit} | {hex_nat_lit} | {oct_nat_lit} | {bin_nat_lit})
 		}
 		return genSymbol(ExpressionSymbols.T_ANTIV, yytext());
 	}
-	{char_lit} {
+	{character_constant} {
 		if(isDebug) {
 			System.out.print(yytext());
 		}
 		return genSymbol(ExpressionSymbols.T_CHAR_LIT, yytext());	
 	}	
-	{int_lit} {
+	{integer_constant} {
 		if(isDebug) {
 			System.out.print(yytext());
 		}
