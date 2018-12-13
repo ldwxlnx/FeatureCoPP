@@ -46,26 +46,29 @@ public class FeatureTree {
 	public String featureExprToString() {
 		return root.toString();
 	}
-	
+
 	/**
-	 * Tests, if at least one object macro exists within this tree, which matches given pattern.
-	 * Operation stops after finding the first match.
-	 * @param pattern regex pattern
+	 * Tests, if at least one object macro exists within this tree, which
+	 * matches given pattern. Operation stops after finding the first match.
+	 * 
+	 * @param pattern
+	 *            regex pattern
 	 * @return true for first found match, false otherwise
 	 */
 	public boolean containsObjMacro(Pattern pattern) {
 		return tdMap.contains(pattern);
 	}
-	
+
 	public void setTDMap(ExpressionParser.ObjMacroHistogram tdMap) {
 		this.tdMap = tdMap;
 	}
+
 	public ExpressionParser.ObjMacroHistogram getTDMap() {
 		return tdMap;
 	}
-//	public int getTanglingDegree() {
-//		return tdMap.getTotalObjMacroCount();
-//	}
+	// public int getTanglingDegree() {
+	// return tdMap.getTotalObjMacroCount();
+	// }
 
 	/**
 	 * Finalizes bottom-up created tree with root node 'root'.
@@ -155,7 +158,8 @@ public class FeatureTree {
 		 */
 		@Override
 		public String toString() {
-			StringBuilder sb = new StringBuilder(isEmbracedByParentheses ? "(" : "");
+			StringBuilder sb = new StringBuilder(
+					isEmbracedByParentheses ? "(" : "");
 			if (left != null) {
 				sb.append(left.toString());
 			}
@@ -633,8 +637,9 @@ public class FeatureTree {
 			// since we have (hexa-)decimal or octal input (maybe greater than
 			// 32bit)
 			// UuLl suffixes?
-			if(symbol.matches(".*[UuLl]+.*")) {
-				// remove character portion - we have to handle as signed long anyway 
+			if (symbol.matches(".*[UuLl]+.*")) {
+				// remove character portion - we have to handle as signed long
+				// anyway
 				symbol = symbol.replaceAll("[LlUu]", "");
 			}
 			value = Long.decode(symbol);
@@ -662,12 +667,17 @@ public class FeatureTree {
 	public static class CharLiteral extends Node {
 		public CharLiteral(Node left, Node right, String symbol) {
 			super(left, right, symbol);
-			System.out.println(symbol + ":" + symbol.length());
-			// multibytes rejected by lexer
-			// escape sequences e.g. '\t'
-			if (symbol.length() == 4) {
+			// remove leading/trailing ticks (')
+			String data = symbol.substring(1, symbol.length() - 1);
+			int dataLength = data.length();		
+			// pure literals
+			if (dataLength == 1) {
+				value = data.charAt(0);
+			}
+			// simple escapes or single digit octal literals (e.g., \4)
+			else if (dataLength == 2) {
 				switch (symbol) {
-				case "'\0'":
+				case "'\\0'":
 					value = 0;
 					break;
 				case "'\\a'":
@@ -691,22 +701,43 @@ public class FeatureTree {
 				case "'\\r'":
 					value = 13;
 					break;
+				// cf. C11 std n1570 "description # 3 and 4" as alternative for
+				// literal '"'
+				case "'\\\"'": // '\"'
+					value = 34;
+					break;
 				case "'\\''": // '\''
 					value = 39;
+					break;
+				// cf. C11 std n1570 "description # 3 and 4" as alternative for
+				// literal '?'
+				case "'\\?'": // '\?'
+					value = 63;
 					break;
 				case "'\\\\'": // '\\'
 					value = 92;
 					break;
-					// TODO all new escape sequences
 				default:
-					// should never happen
+					// octal single digit, e.g. \4
+					value = parseEscapedValue(data);
 					break;
 				}
 			}
-			// simple literals (e.g. 'A')
-			else if (symbol.length() == 3) {
-				value = (long) symbol.charAt(1);
+			// one 'til three digit octal escapes (\1, \12, \123) or arbitrary length hex escapes (\x2, \cAFeBabE)
+			else if (dataLength >= 3) {
+				value = parseEscapedValue(data);
 			}
+			// three digit octal escapes (\213) or two digit hex escapes (\x12)
+			else if (dataLength == 4) {
+				value = parseEscapedValue(data);
+			}
+			// longer hex escapes (\x100 or \xcAfeBaBE)
+			else {
+				//TODO https://en.cppreference.com/w/cpp/language/character_literal
+				// wide chars still not working -- by parser!
+				System.out.println("Suprise: [" + data + "]");
+			}
+			System.out.println(symbol + ":" + data + ":" + dataLength + ":" + value);			
 		}
 
 		@Override
@@ -715,6 +746,23 @@ public class FeatureTree {
 			newLiteral.isEmbracedByParentheses = isEmbracedByParentheses;
 			newLiteral.value = value;
 			return newLiteral;
+		}
+
+		private long parseEscapedValue(String data) {
+			long value = -1;			
+			// only inspect escaped data
+			if (data.startsWith("\\")) {				
+				int dataLength = data.length();
+				// some hex escape
+				if (data.matches("^\\\\x.*")) {
+					value = Long.valueOf(data.substring(2, dataLength), 16);
+				}
+				// an octal sequence
+				else {
+					value = Long.valueOf(data.substring(1, dataLength), 8);
+				}
+			}
+			return value;
 		}
 
 		private long value;
@@ -833,11 +881,9 @@ public class FeatureTree {
 			// not previously registered? same var within different exprs!
 			if (macro == null) {
 				// System.out.println("Inserting " + symbol);
-				macros.put(
-						symbol,
-						macro = model.intVar(IntVar.MIN_INT_BOUND,
-								IntVar.MAX_INT_BOUND, true));
-				//macros.put(symbol, macro = model.intVar(-100, 100, true));
+				macros.put(symbol, macro = model.intVar(IntVar.MIN_INT_BOUND,
+						IntVar.MAX_INT_BOUND, true));
+				// macros.put(symbol, macro = model.intVar(-100, 100, true));
 			}
 			// else {
 			// System.out.println("Symbol " + symbol + " already defined");
@@ -856,7 +902,7 @@ public class FeatureTree {
 		 */
 		@Override
 		public String toString() {
-			StringBuilder sb = new StringBuilder(symbol);			
+			StringBuilder sb = new StringBuilder(symbol);
 			sb.append("(");
 			// concat argument list
 			if (args != null && !args.isEmpty()) {
@@ -923,6 +969,6 @@ public class FeatureTree {
 	/** keyword of conditional (e.g. #if|#ifdef|#ifndef|#elif|#else) */
 	protected String keyword;
 	protected static HashMap<String, IntVar> macros = new HashMap<String, IntVar>();
-	//protected int tangling_degree;
+	// protected int tangling_degree;
 	protected ExpressionParser.ObjMacroHistogram tdMap;
 }

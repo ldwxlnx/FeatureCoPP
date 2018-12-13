@@ -125,9 +125,9 @@ character_constant = [LuU]?'{c_char_sequence}'
 c_char_sequence = {c_char}
 c_char = [A-Za-z0-9] | [\[\]\"#\{\}()\!\$@%&/=\?`\*\+\~,;\.:\-_<>\|\^ ] | {escapeSequence} 
 escapeSequence = {simpleEscapeSequence} | {octalEscapeSequence} | {hexadecimalEscapeSequence}
-simpleEscapeSequence = \\0 | \\' | \\\" | \\? | \\\\ | \\a | \\b | \\f | \\n | \\r | \\t | \\v
+simpleEscapeSequence = \\0 | \\' | \\\" | \\\? | \\\\ | \\a | \\b | \\f | \\n | \\r | \\t | \\v
 octalEscapeSequence = \\{octal_digit}{1,3}
-hexadecimalEscapeSequence = \\x{hexadecimal_digit}*	
+hexadecimalEscapeSequence = \\x{hexadecimal_digit}+
 
 /****** INTEGERS
  C11 n1570 §6.4.4.1, p. 62
