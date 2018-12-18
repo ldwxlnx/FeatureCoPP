@@ -21,27 +21,47 @@
 #if FOO == '\7'
 #endif
 
-#if FOO == '\10'
+#if FOO == '\10' // 8
 #endif
 
-#if FOO == '\100'
+#if FOO == '\100' // 64
 #endif
 
 // hex
 #if FOO == '\x1'
 #endif
 
-#if FOO == '\x10'
+#if FOO == '\x10' // 16
 #endif
 
-#if FOO == '\xfF'
+#if FOO == '\xfF' // 255
 #endif
 
-#if FOO == '\x100'
+#if FOO == '\x100' // 256
 #endif
 
-#if FOO == '\xCAFEBABE'
+#if FOO == '\xCAFEBABE' // 3405691582
 #endif
-//#if FOO == L'abc'
-//#endif
+
+// utf-8 character literal
+#if FOO == u8'\u0039' // ascii '9', value 57
+#endif
+
+//16-bit wide character constant
+#if FOO == u'\u0039' // ascii '9', value 57
+#endif
+//32-bit wide character constant
+#if FOO == U'\U00000039' // ascii '9', value 57
+#endif
+// wide-character constants
+#if FOO == L'A' // ascii 'A', value 65
+#endif
+
+// multi-character constants
+#if FOO == 'ab'   // 0x0000000000006162 -> 24930
+#endif
+#if FOO == 'abc'  // 0x0000000000616263 -> 6382179
+#endif
+#if FOO == 'abcd' // 0x0000000061626364 -> 1633837924
+#endif
 

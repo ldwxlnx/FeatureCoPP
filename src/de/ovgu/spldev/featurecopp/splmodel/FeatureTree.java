@@ -1,5 +1,7 @@
 package de.ovgu.spldev.featurecopp.splmodel;
 
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -630,10 +632,36 @@ public class FeatureTree {
 			return left.makeCSP(model).mod(right.makeCSP(model)).intVar();
 		}
 	}
+	public static class Literal extends Node {
 
-	public static class IntLiteral extends Node {
+		public Literal(Node left, Node right, String symbol) {
+			super(left, right, symbol);
+		}
+
+		@Override
+		public IntVar makeCSP(Model model) throws Exception {
+			// TODO unfortunately sources are not limited to restricted Int-range
+			// (e.g. long values)
+			return model.intVar(MathUtils.safeCast(value));
+		}
+
+		@Override
+		public Node clone() {
+			Literal newLiteral = new Literal(null, null, symbol);
+			newLiteral.isEmbracedByParentheses = isEmbracedByParentheses;
+			newLiteral.value = value;
+			return newLiteral;
+		}
+		private long value;
+	}
+
+	public static class IntLiteral extends Literal {
 		public IntLiteral(Node left, Node right, String symbol) {
 			super(left, right, symbol);
+			parseIntValue(symbol);
+		}
+
+		private void parseIntValue(String symbol) {			
 			// since we have (hexa-)decimal or octal input (maybe greater than
 			// 32bit)
 			// UuLl suffixes?
@@ -642,136 +670,143 @@ public class FeatureTree {
 				// anyway
 				symbol = symbol.replaceAll("[LlUu]", "");
 			}
-			value = Long.decode(symbol);
-		}
-
-		@Override
-		public Node clone() {
-			IntLiteral newLiteral = new IntLiteral(null, null, symbol);
-			newLiteral.isEmbracedByParentheses = isEmbracedByParentheses;
-			newLiteral.value = value;
-			return newLiteral;
-		}
-
-		private long value;
-
-		@Override
-		public IntVar makeCSP(Model model) throws Exception {
-			// TODO
-			// RealVar v = model.realVar(value, 1d);
-			// System.out.println(v);
-			return model.intVar(MathUtils.safeCast(value));
+			// in case larger than Integer.MAX_VALUE we truncate, e.g.:
+			//see: 18446744073709551615ULL
+			//vs:   9223372036854775807=LONG_MAXVALUE
+			BigInteger biValue = null;
+			try {
+				// hex
+				if(symbol.matches("^0[xX].*")) {
+					// only parse effective numeric portion, e.g. FF from 0xFF
+					biValue = new BigInteger(symbol.substring(2, symbol.length()), 16);
+				}
+				// octal
+				else if(symbol.matches("^0\\d+")) {
+					biValue = new BigInteger(symbol, 8);
+				}
+				// decimal
+				else {
+					biValue = new BigInteger(symbol);
+				}
+				
+				super.value = biValue.intValueExact();
+			} catch(ArithmeticException ae) {
+				super.value = Integer.MAX_VALUE;
+			}
+			//System.out.println("intliteral=[" + symbol + ", value=" + super.value + "]");
 		}
 	}
 
-	public static class CharLiteral extends Node {
+	public static class CharLiteral extends Literal {
 		public CharLiteral(Node left, Node right, String symbol) {
 			super(left, right, symbol);
+			parseCharValue(symbol);
+			
+		}
+
+		private void parseCharValue(String symbol) {
+			boolean isPrefixedLiteral = symbol.matches("^[LuU].*");
+			// for prefixed literals we ignore leading LUu 
+			int beginIndex = isPrefixedLiteral ?
+					// utf-8 literal (e.g., u8'a')?
+					// then effective literal starts at index 3, 2 otherwise
+					symbol.charAt(1) == '8' ? 3 : 2
+					// no prefixed literal		
+					: 1;
+			int endIndex = symbol.length() - 1;
 			// remove leading/trailing ticks (')
-			String data = symbol.substring(1, symbol.length() - 1);
+			String data = symbol.substring(beginIndex, endIndex);
 			int dataLength = data.length();		
 			// pure literals
 			if (dataLength == 1) {
-				value = data.charAt(0);
+				super.value = data.charAt(0);
 			}
 			// simple escapes or single digit octal literals (e.g., \4)
 			else if (dataLength == 2) {
 				switch (symbol) {
 				case "'\\0'":
-					value = 0;
+					super.value = 0;
 					break;
 				case "'\\a'":
-					value = 7;
+					super.value = 7;
 					break;
 				case "'\\b'":
-					value = 8;
+					super.value = 8;
 					break;
 				case "'\\t'":
-					value = 9;
+					super.value = 9;
 					break;
 				case "'\\n'":
-					value = 10;
+					super.value = 10;
 					break;
 				case "'\\v'":
-					value = 11;
+					super.value = 11;
 					break;
 				case "'\\f'":
-					value = 12;
+					super.value = 12;
 					break;
 				case "'\\r'":
-					value = 13;
+					super.value = 13;
 					break;
 				// cf. C11 std n1570 "description # 3 and 4" as alternative for
 				// literal '"'
 				case "'\\\"'": // '\"'
-					value = 34;
+					super.value = 34;
 					break;
 				case "'\\''": // '\''
-					value = 39;
+					super.value = 39;
 					break;
 				// cf. C11 std n1570 "description # 3 and 4" as alternative for
 				// literal '?'
 				case "'\\?'": // '\?'
-					value = 63;
+					super.value = 63;
 					break;
 				case "'\\\\'": // '\\'
-					value = 92;
+					super.value = 92;
 					break;
 				default:
 					// octal single digit, e.g. \4
-					value = parseEscapedValue(data);
+					super.value = parseUntickedValue(data);
 					break;
 				}
 			}
-			// one 'til three digit octal escapes (\1, \12, \123) or arbitrary length hex escapes (\x2, \cAFeBabE)
-			else if (dataLength >= 3) {
-				value = parseEscapedValue(data);
-			}
-			// three digit octal escapes (\213) or two digit hex escapes (\x12)
-			else if (dataLength == 4) {
-				value = parseEscapedValue(data);
-			}
-			// longer hex escapes (\x100 or \xcAfeBaBE)
+			// two 'til three digit octal escapes (\1, \12, \123) or arbitrary length hex escapes (\x2, \XcAFeBabE)
 			else {
-				//TODO https://en.cppreference.com/w/cpp/language/character_literal
-				// wide chars still not working -- by parser!
-				System.out.println("Suprise: [" + data + "]");
+				super.value = parseUntickedValue(data);
 			}
-			System.out.println(symbol + ":" + data + ":" + dataLength + ":" + value);			
+			//System.out.println(symbol + ":D=" + data + ":L=" + dataLength + ":V=" + value + ":" + isPrefixedLiteral);	
 		}
 
-		@Override
-		public Node clone() {
-			CharLiteral newLiteral = new CharLiteral(null, null, symbol);
-			newLiteral.isEmbracedByParentheses = isEmbracedByParentheses;
-			newLiteral.value = value;
-			return newLiteral;
-		}
-
-		private long parseEscapedValue(String data) {
+		private long parseUntickedValue(String data) {
 			long value = -1;			
 			// only inspect escaped data
 			if (data.startsWith("\\")) {				
 				int dataLength = data.length();
-				// some hex escape
-				if (data.matches("^\\\\x.*")) {
+				// some hex or unicode escape, e.g., \x123 or \u0039
+				if (data.matches("^\\\\(x|u|U).*")) {
 					value = Long.valueOf(data.substring(2, dataLength), 16);
 				}
-				// an octal sequence
+				// an octal sequence, e.g., \123
 				else {
 					value = Long.valueOf(data.substring(1, dataLength), 8);
 				}
 			}
+			// multicharacter constant
+			else {
+				value = packMultiCharLiteral(data);
+			}
 			return value;
 		}
-
-		private long value;
-
-		@Override
-		public IntVar makeCSP(Model model) throws Exception {
-			// TODO unfortunately source are not limited to restricted Int-range
-			// (e.g. long values)
-			return model.intVar(MathUtils.safeCast(value));
+		private long packMultiCharLiteral(String data) {
+			// see https://en.cppreference.com/w/c/language/character_constant
+			long value = 0;
+			// 'abcd' -> int(97 98 99 100) -> 0x61626364
+			byte[] dataBytes = data.getBytes();
+			for(int i = 0; i < dataBytes.length; i++) {		
+				value |= dataBytes[i] << 8 * (dataBytes.length - (i + 1));
+				//System.out.println(String.format("[%s]", Long.toHexString(value)));
+			}
+			return value;
 		}
 	}
 

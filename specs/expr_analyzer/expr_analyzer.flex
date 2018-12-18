@@ -97,12 +97,25 @@ endOfLineComment     = "//" {inputCharacter}* {lineTerminator}?
 documentationComment = "/**" {commentContent} "*"+ "/"
 commentContent       = ( [^*] | \*+ [^/*] )*
 
+/****** IDENTIFIERS ******
+C11 n1570 §6.4.2.1, p.59ff
+see also:
+https://en.cppreference.com/w/c/language/identifier
+https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
+**************************/
 //identifier = [:jletter:] [:jletterdigit:]*
 // we are not checking for valid identifiers! we use 'id' for macro names 
 // and for primary exprs. so an 'id' can also occur as argument to macro
 // calls (basically any kind of c-language tokens or macroname), e.g.:
 // SIBYTE_HDR_FEATURE(112x, PASS1) 
 identifier = [A-Za-z0-9_]+
+//identifier = {identifier_nondigit}+({identifier_nondigit}|{digit})*
+//identifier_nondigit = {non_digit} | {universal_character_name} | {implementation_defined}
+//nondigit = [A-Za-z_]
+//digit = [0-9]
+//universal_character_name = {unicodeEscapeSequence} | {unicodeEscapeSequence}
+//implementation_defined = {vms_system_char}
+//vms_system_char = \$
 
 /** Additional function macro argument lexical hassle (found in gcc,
 e.g., "__has_include (<stdfix-avrlibc.h>)" (cf. gcc-7.3.0 or similar clang header tests)
@@ -116,20 +129,21 @@ funmac_arg_namespace = [A-Za-z0-9_::]+
 // e.g. #if __has_include__ "complex.h"
 funmac_no_parentheses = {identifier}\s+({funmac_arg_glob_header}|{funmac_arg_loc_header})
 
-//char_lit = '[A-Za-z0-9]'|'[\[\]\"#\{\}()\!\$@%&/=\?`\*\+\~,;\.:\-_<>\|\^ ]'|
-//	'\\0'| {escapeSequence}
-/****** CHARACTERS
+/****** CHARACTERS ********
  C11 n1570 §6.4.4.4, p. 67
  **************************/
-character_constant = [LuU]?'{c_char_sequence}'	
-c_char_sequence = {c_char}
+character_constant = {c_char_prefix}?'{c_char_sequence}'
+c_char_prefix = u8 | [LuU]
+c_char_sequence = {c_char}+
 c_char = [A-Za-z0-9] | [\[\]\"#\{\}()\!\$@%&/=\?`\*\+\~,;\.:\-_<>\|\^ ] | {escapeSequence} 
-escapeSequence = {simpleEscapeSequence} | {octalEscapeSequence} | {hexadecimalEscapeSequence}
+escapeSequence = {simpleEscapeSequence} | {octalEscapeSequence} | {hexadecimalEscapeSequence} | {unicodeEscapeSequence} | {UnicodeEscapeSequence}
 simpleEscapeSequence = \\0 | \\' | \\\" | \\\? | \\\\ | \\a | \\b | \\f | \\n | \\r | \\t | \\v
 octalEscapeSequence = \\{octal_digit}{1,3}
 hexadecimalEscapeSequence = \\x{hexadecimal_digit}+
+unicodeEscapeSequence = \\u{hexadecimal_digit}{4,4}
+UnicodeEscapeSequence = \\U{hexadecimal_digit}{8,8}
 
-/****** INTEGERS
+/****** INTEGERS **********
  C11 n1570 §6.4.4.1, p. 62
  see also: http://en.cppreference.com/w/cpp/language/integer_literal
  TODO: C++14 "Optional single quotes(') may be inserted between the digits as a separator. They are ignored by the compiler."

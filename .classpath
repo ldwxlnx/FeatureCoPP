@@ -10,7 +10,6 @@
 	<classpathentry kind="lib" path="lib/jflex-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/java-cup-11a-runtime.jar"/>
 	<classpathentry kind="lib" path="lib/java-cup-11a.jar"/>
-	<classpathentry kind="lib" path="lib/choco-solver-4.0.4-with-dependencies.jar" sourcepath="lib/choco-solver-4.0.4-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.cdt.core_5.6.0.201402142303.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar"/>
@@ -22,5 +21,6 @@
 	<classpathentry kind="lib" path="lib/org.eclipse.equinox.registry_3.5.301.v20130717-1549.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.osgi_3.9.1.v20140110-1610.jar"/>
 	<classpathentry kind="lib" path="lib/com.ibm.icu_50.1.1.v201304230130.jar"/>
+	<classpathentry kind="lib" path="lib/choco-solver-4.10.0.jar" sourcepath="lib/choco-solver-4.10.0-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
