@@ -3,10 +3,12 @@ package de.ovgu.spldev.featurecopp.config;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.HashMap;
 
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
+import de.ovgu.spldev.featurecopp.filesystem.Finder;
 import de.ovgu.spldev.featurecopp.log.Logger;
 
 
@@ -18,9 +20,13 @@ public class Configuration {
 	public static final String MERGE_DIR_SUFFIX = "_merged";
 	public static final String MODULE_DIR = "___" + APPLICATION_NAME + "_modules";
 	/** what kind of files should be located */
-	//public static final String FIND_GLOB_PATTERN = "*.{c,cpp,h,hpp,l,y}";
-	public static final String FIND_GLOB_PATTERN = "*.{c,h}";
-	public static final String SPLIT_LOGFILE = APPLICATION_NAME + "_split.log";
+	//public static final String FIND_PATTERN = "*.{c,cpp,h,hpp,l,y}";
+	// for syntax, see Finder -> FileSystems.getDefault().getPathMatcher
+	public static final String FIND_PATTERN = "^(\\w|-)+\\.[hc]";
+	public static final Finder.FindParameter.PatternStrategy FIND_PATTERN_STRATEGY = Finder.FindParameter.PatternStrategy.regex;
+	//public static final String FIND_PATTERN = "*.{c,h}";
+	//public static final Finder.FindParameter.PatternStrategy FIND_PATTERN_STRATEGY = Finder.FindParameter.PatternStrategy.glob;
+	public static final String SPLIT_LOGFILE = APPLICATION_NAME + "_split.log";	
 	public static final String CSP_LOGFILE = APPLICATION_NAME + "_csp.log";
 	public static final String AST_LOGFILE = APPLICATION_NAME + "_ast.log";
 	public static final String MERGE_LOGFILE = APPLICATION_NAME + "_merge.log";

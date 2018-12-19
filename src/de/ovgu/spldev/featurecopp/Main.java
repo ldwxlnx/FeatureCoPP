@@ -102,8 +102,6 @@ public class Main {
 
 			logger.writeInfo("Starting split with"
 					+ (Configuration.SKIP_ANALYSIS ? "out" : "") + " analysis");
-			logger.writeInfo("Directory=" + inputDir.toString());
-			logger.writeInfo("File pattern=" + Configuration.FIND_GLOB_PATTERN);
 			logger.writeInfo("Feature/SD pattern=" + requestExprPattern);
 			CPPAnalyzer cppAnalyzer = new CPPAnalyzer(logger, inputDir,
 					outputDir, moduleDir, requestExprPattern);
@@ -115,7 +113,7 @@ public class Main {
 
 				Finder.FindParameter fparam = new Finder.FindParameter(
 						inputDir.toString(), TYPE.FILE, 0,
-						Configuration.FIND_GLOB_PATTERN, false, false,
+						Configuration.FIND_PATTERN, Configuration.FIND_PATTERN_STRATEGY, false, false,
 						cppAnalyzer);
 				logger.writeInfo(fparam.toString());
 				logger.writeInfo("Processed files: " + Finder.find(fparam));
@@ -214,7 +212,7 @@ public class Main {
 			try {
 				Finder.FindParameter fparam = new Finder.FindParameter(
 						inputDir.toString(), TYPE.FILE, 0,
-						Configuration.FIND_GLOB_PATTERN, false, false, merger);
+						Configuration.FIND_PATTERN, Configuration.FIND_PATTERN_STRATEGY, false, false, merger);
 				logger.writeInfo(fparam.toString());
 				logger.writeInfo("Processed files: " + Finder.find(fparam));
 			} catch (java.nio.file.AccessDeniedException perm_e) {

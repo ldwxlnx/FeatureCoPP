@@ -22,6 +22,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 
+import de.ovgu.spldev.featurecopp.config.Configuration;
+
 /**
  * GNU findutils inspired filesystem object locator, heavily inspired by
  * https://docs.oracle.com/javase/tutorial/essential/io/walk.html
@@ -74,28 +76,33 @@ public class Finder extends SimpleFileVisitor<Path> {
 	 * @author K. Ludwig
 	 */
 	public static class FindParameter {
-		public FindParameter(String rootDir, TYPE type, int maxDepth, String globPattern, boolean followLinks, boolean continueOnError,
+		public static enum PatternStrategy {
+			glob, regex
+		}
+		public FindParameter(String rootDir, TYPE type, int maxDepth, String pattern, PatternStrategy patternStrategy, boolean followLinks, boolean continueOnError,
 				Processable callback) {
-			init(rootDir, type, maxDepth, globPattern, followLinks, continueOnError, callback);
+			init(rootDir, type, maxDepth, pattern, patternStrategy, followLinks, continueOnError, callback);
 		}
 		public String toString() {
 			return  this.getClass().getSimpleName() + "={"
 					+ "rootdir=\"" + rootDir + "\";"
 					+ "type=\"" + type.name()  + "\";"
-					+ "glob=\"" + globPattern  + "\";"
+					+ "pattern=\"" + pattern  + "\";"
+					+ "patternstrategy=\"" + patternStrategy + "\";"
 					+ "maxdepth=\"" + maxDepth  + "\";"
 					+ "followsyml=\"" + followLinks  + "\";"
 					+ "continueOnErr=\"" + continueOnError  + "\";"
 					+ "callback\"" + callback + "\""
 					+ "}";
 		}
-		private void init(String rootDir, TYPE type, int maxDepth, String globPattern, boolean followLinks, boolean continueOnError,
+		private void init(String rootDir, TYPE type, int maxDepth, String pattern, PatternStrategy patternStrategy,boolean followLinks, boolean continueOnError,
 				Processable callback) {
 			this.rootDir = rootDir == null ? "." : rootDir;
 			this.type = type == null ? TYPE.ALL : type;
 			// all values below 1 are treated as "don't care"
 			this.maxDepth = maxDepth < 1 ? Integer.MAX_VALUE : maxDepth;
-			this.globPattern = globPattern == null ? "*" : globPattern;
+			this.pattern = pattern == null ? "*" : pattern;
+			this.patternStrategy = patternStrategy == null ? PatternStrategy.regex : patternStrategy;
 			this.followLinks = followLinks;
 			this.continueOnError = continueOnError;
 			this.callback = callback == null ? new PrintStreamWriter(System.out) : callback;
@@ -103,7 +110,8 @@ public class Finder extends SimpleFileVisitor<Path> {
 		private String rootDir;
 		private TYPE type;
 		private int maxDepth;
-		private String globPattern;
+		private String pattern;
+		private PatternStrategy patternStrategy;
 		private boolean followLinks;
 		private boolean continueOnError;
 		private Processable callback;
@@ -171,7 +179,8 @@ public class Finder extends SimpleFileVisitor<Path> {
 	
 	private Finder(final FindParameter fparam) {
 		this.fparam = fparam;
-		matcher = FileSystems.getDefault().getPathMatcher("glob:" + fparam.globPattern);
+		// e.g. FileSystems.getDefault().getPathMatcher("glob:" + fparam.globPattern);
+		matcher = FileSystems.getDefault().getPathMatcher(fparam.patternStrategy.toString() + ":" + fparam.pattern);
 	}
 	
 	// Compares the glob pattern against
