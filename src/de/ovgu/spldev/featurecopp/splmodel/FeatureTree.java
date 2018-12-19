@@ -632,10 +632,15 @@ public class FeatureTree {
 			return left.makeCSP(model).mod(right.makeCSP(model)).intVar();
 		}
 	}
+	// we refuse to make this abstract to reuse a common clone() 
 	public static class Literal extends Node {
 
 		public Literal(Node left, Node right, String symbol) {
 			super(left, right, symbol);
+		}
+		
+		public void parseValue(String symbol) {
+			// default stub
 		}
 
 		@Override
@@ -658,10 +663,10 @@ public class FeatureTree {
 	public static class IntLiteral extends Literal {
 		public IntLiteral(Node left, Node right, String symbol) {
 			super(left, right, symbol);
-			parseIntValue(symbol);
+			parseValue(symbol);
 		}
-
-		private void parseIntValue(String symbol) {			
+		@Override
+		public void parseValue(String symbol) {			
 			// since we have (hexa-)decimal or octal input (maybe greater than
 			// 32bit)
 			// UuLl suffixes?
@@ -700,11 +705,11 @@ public class FeatureTree {
 	public static class CharLiteral extends Literal {
 		public CharLiteral(Node left, Node right, String symbol) {
 			super(left, right, symbol);
-			parseCharValue(symbol);
+			parseValue(symbol);
 			
 		}
-
-		private void parseCharValue(String symbol) {
+		@Override
+		public void parseValue(String symbol) {
 			boolean isPrefixedLiteral = symbol.matches("^[LuU].*");
 			// for prefixed literals we ignore leading LUu 
 			int beginIndex = isPrefixedLiteral ?

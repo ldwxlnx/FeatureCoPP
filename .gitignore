@@ -28,3 +28,4 @@ hs_err_pid*
 /test_dos_split/
 /test_unix_merged/
 /test_unix_split/
+/test_tmp_split/
