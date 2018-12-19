@@ -276,9 +276,11 @@ terminal String
 //;
 
 non terminal de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Node
-	n_macro,
+	n_obj_macro,
+	n_fun_macro,	
 	n_macro_arglist,
 	n_macro_args,
+	n_macro_arg,
 	n_expr,
 	n_literal,
 	n_defined
@@ -337,7 +339,7 @@ n_conditional_clause ::= T_IF:_if n_expr:e
 		ftree.setRoot(e);
 		RESULT = ftree;
 	:}
-	| T_IFDEF:ifdef n_macro:m
+	| T_IFDEF:ifdef n_obj_macro:m
 	{:
 		FeatureTree ftree = new IfdefTree();
 		ftree.setKeyword(ifdef);
@@ -353,7 +355,7 @@ n_conditional_clause ::= T_IF:_if n_expr:e
 		RESULT = ftree;
 	:}
 */	
-	| T_IFNDEF:ifndef n_macro:m
+	| T_IFNDEF:ifndef n_obj_macro:m
 	{:
 		FeatureTree ftree = new IfndefTree();
 		ftree.setKeyword(ifndef);
@@ -484,7 +486,9 @@ n_expr ::= n_expr:cond T_QM:qm n_expr:expr_t T_COLON:col n_expr:expr_f
 	{:
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.UnaryBitNeg(null, e, bn);
 	:}
-	| n_macro:m								// MACRO itself
+	| n_obj_macro:m								// object macro
+	{: RESULT = m; :}	
+	| n_fun_macro:m								// function macro
 	{: RESULT = m; :}	
 	| n_defined:d
 	{: RESULT = d; :}						// defined operator
@@ -504,7 +508,7 @@ n_literal ::= T_INTEGER_LIT:lit
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.CharLiteral(null, null, lit);
 	:}
 ;
-n_macro	::= T_IDENTIFIER:id // object macro
+n_obj_macro ::= T_IDENTIFIER:id
 	{:
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, id);
 		// collect for SD per project
@@ -514,16 +518,8 @@ n_macro	::= T_IDENTIFIER:id // object macro
 		// collect for TD per AST
 		parser.insertObjMacroExpr(id);
 	:}
-	| T_FUNMAC_ARG_GLOB_HEADER:header	{:
-		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);
-	:}
-	| T_FUNMAC_ARG_LOC_HEADER:header {:
-		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);
-	:}
-	| T_FUNMAC_ARG_NAMESPACE:namesp	{:
-		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, namesp);
-	:}
-	| T_FUNMAC_NO_PARENTHESES:fmacnopar {:		
+;
+n_fun_macro	::= T_FUNMAC_NO_PARENTHESES:fmacnopar {:		
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, fmacnopar);
 	:}
 	| T_IDENTIFIER:id T_LPAR:lpar n_macro_arglist:arglist T_RPAR:rpar // function macro
@@ -540,26 +536,41 @@ n_macro_arglist ::= n_macro_args:args
 	{: RESULT = args; :}
 	| /* empty */
 ;
-n_macro_args ::= n_expr:expr
+n_macro_args ::= n_macro_arg:arg
 	{:
-		parser.currFMacroArgs.add(expr);
-		//expr.setArgs(args);
-		//RESULT = new MacroArg(null, expr, );
+		parser.currFMacroArgs.add(arg);
 	:}
 	T_COMMA:c n_macro_args:args
-	| n_expr:expr
+	| n_macro_arg:arg
 	{:
-		parser.currFMacroArgs.add(expr);
+		parser.currFMacroArgs.add(arg);
+		RESULT = arg;
+	:}
+;
+n_macro_arg ::= n_expr:expr
+	{:
 		RESULT = expr;
 	:}
-;		
-n_defined ::= T_DEFINED:def n_macro:m
+	| T_FUNMAC_ARG_GLOB_HEADER:header
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);
+	:}
+	| T_FUNMAC_ARG_LOC_HEADER:header
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, header);
+	:}
+	| T_FUNMAC_ARG_NAMESPACE:namesp
+	{:
+		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Macro(null, null, namesp);
+	:}
+;
+n_defined ::= T_DEFINED:def n_obj_macro:m
 	{:
 		// makes #if defined A -> #if defined(A) and hence such exprs equivalent to occurrences with parentheses
 		m.setEmbracedByParentheses();
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Defined(null, m, def);
 	:}
-	| T_DEFINED:def T_LPAR:lpar n_macro:m T_RPAR:rpar
+	| T_DEFINED:def T_LPAR:lpar n_obj_macro:m T_RPAR:rpar
 	{:
 		m.setEmbracedByParentheses();		// for presentational reasons
 		RESULT = new de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Defined(null, m, def);

@@ -45,14 +45,13 @@ public final class CPPAnalyzer implements Processable {
 		}
 		logger.writeInfo("Processing " + fso);
 		try {
-			scan(false, fso);
+			scan(showLexerOutput, fso);
 		} catch (Exception e) {
 			// smth regarding input file went wrong
 			logger.writeFail(e.getMessage());
 			e.printStackTrace();
 		}
-	}
-
+	}	
 	/** Token classification, also provided to JFlex spec */
 	public static enum TYPE {
 		SRC, IF, IFDEF, IFNDEF, ELIF, ELSE, ENDIF, COMMENT, LINECOMMENT, DIRLT, LINETERM, UNDEF
@@ -78,7 +77,7 @@ public final class CPPAnalyzer implements Processable {
 		private String value;
 	}
 
-	public CPPAnalyzer(Logger logger, final Path inputDir,
+	public CPPAnalyzer(boolean showExprLexTokens, Logger logger, final Path inputDir,
 			final Path outputDir, final Path moduleDir,
 			final Pattern requestExprPattern) {
 		this.logger = logger;
@@ -88,6 +87,7 @@ public final class CPPAnalyzer implements Processable {
 		this.cppScanner = new CPPScanner();
 		this.cppScanner.debug(false);
 		this.requestExprPattern = requestExprPattern;
+		this.showLexerOutput = showExprLexTokens;
 	}
 
 	public void scan(boolean showLexerOutput, final Path currentFile)
@@ -142,7 +142,7 @@ public final class CPPAnalyzer implements Processable {
 								.toString());
 					}
 					// maintain a new scope
-					featureScopeManager.addIfElif(requestExprPattern,
+					featureScopeManager.addIfElif(showLexerOutput, requestExprPattern,
 							condExpr, sym.line, sym.type);
 					break;
 				}
@@ -334,4 +334,6 @@ public final class CPPAnalyzer implements Processable {
 	private Path outputDir;
 	/** a regular expression describing feature expression to get honored */
 	private Pattern requestExprPattern;
+	/** controls whether ExpressionLexer should display tokenization*/
+	private boolean showLexerOutput;
 }

@@ -89,11 +89,11 @@ public class FeatureScopeManager {
 		this.currentOriginalSourceFile = currentOriginalSourceFile;
 	}
 
-	public void addIfElif(final Pattern requestPattern,
+	public void addIfElif(boolean showLexerOutput, final Pattern requestPattern,
 			final String conditionalExpr, int lineNumber,CPPAnalyzer.TYPE type) throws Exception {
 		FeatureTree featureTree = null;
 		try {
-			featureTree = parseConditionalExpression(conditionalExpr);
+			featureTree = parseConditionalExpression(showLexerOutput, conditionalExpr);
 		} catch (Exception e) {
 			// rethrow
 			throw new Exception(e.getMessage() + " for expression: "
@@ -550,16 +550,16 @@ public class FeatureScopeManager {
 
 	/**
 	 * Delegates conditional expression to ExpressionParserDriver.
-	 * 
+	 * @param showLexerOutput display Lexer tokenization (for debugging purposes)
 	 * @param conditionalExpr
 	 *            expression to parse
 	 * @return abstract syntax tree of dissected conditional expression
 	 * @throws Exception
 	 *             Exception in case of lexical or syntactic errors
 	 */
-	private FeatureTree parseConditionalExpression(final String conditionalExpr)
+	private FeatureTree parseConditionalExpression(boolean showLexerOutput, final String conditionalExpr)
 			throws Exception {
-		return exprParseDrv.run(false, conditionalExpr, requestPattern);
+		return exprParseDrv.run(showLexerOutput, conditionalExpr, requestPattern);
 	}
 
 	private static PrintStream ast_strm;

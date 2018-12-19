@@ -1,15 +1,11 @@
 package de.ovgu.spldev.featurecopp;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.regex.Pattern;
-
-import org.chocosolver.solver.Model;
 
 import de.ovgu.spldev.featurecopp.config.Configuration;
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
@@ -103,7 +99,7 @@ public class Main {
 			logger.writeInfo("Starting split with"
 					+ (Configuration.SKIP_ANALYSIS ? "out" : "") + " analysis");
 			logger.writeInfo("Feature/SD pattern=" + requestExprPattern);
-			CPPAnalyzer cppAnalyzer = new CPPAnalyzer(logger, inputDir,
+			CPPAnalyzer cppAnalyzer = new CPPAnalyzer(Configuration.EXPR_LEX_SHOW_TOKENS, logger, inputDir,
 					outputDir, moduleDir, requestExprPattern);
 			long start = Time.getCurrentNanoSecs();
 			// ...and re-create (potentially empty, if nothing processed)
@@ -117,6 +113,9 @@ public class Main {
 						cppAnalyzer);
 				logger.writeInfo(fparam.toString());
 				logger.writeInfo("Processed files: " + Finder.find(fparam));
+				if(Configuration.EXPR_LEX_SHOW_TOKENS) {
+					Configuration.writeExpressionSymbolsTo(System.err);
+				}
 			} catch (java.nio.file.AccessDeniedException perm_e) {
 				logger.writeFail("Error accessing " + perm_e.getMessage());
 				Configuration.purgeOutputDir(logger, outputDir.toString());

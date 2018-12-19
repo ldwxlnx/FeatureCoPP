@@ -1,7 +1,6 @@
 package de.ovgu.spldev.featurecopp.lang.cpp;
 
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.regex.Pattern;
 
 import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser.ObjMacroHistogram;

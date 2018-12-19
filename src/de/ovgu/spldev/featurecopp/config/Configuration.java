@@ -3,12 +3,15 @@ package de.ovgu.spldev.featurecopp.config;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.HashMap;
 
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
 import de.ovgu.spldev.featurecopp.filesystem.Finder;
+import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionSymbols;
 import de.ovgu.spldev.featurecopp.log.Logger;
 
 
@@ -16,6 +19,16 @@ public class Configuration {
 	public static final String APPLICATION_NAME = "FeatureCoPP";
 	public static final String LINE_SEPARATOR = System.lineSeparator();
 	public static final String EXTRACT_DIR_SUFFIX = "_split";
+	//public static final boolean EXPR_LEX_SHOW_TOKENS = true;
+	public static final boolean EXPR_LEX_SHOW_TOKENS = false;
+	public static final void writeExpressionSymbolsTo(PrintStream strm) throws IllegalArgumentException, IllegalAccessException {
+		if(strm == null) {
+			strm = System.out;
+		}
+		for(Field field : ExpressionSymbols.class. getFields()) {
+			strm.println(field.getName() + "=" + field.getInt(field));
+	    }
+	}
 	// TODO remove later for transparent rebase
 	public static final String MERGE_DIR_SUFFIX = "_merged";
 	public static final String MODULE_DIR = "___" + APPLICATION_NAME + "_modules";

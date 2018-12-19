@@ -1,6 +1,7 @@
 /* --------------------------Usercode Section------------------------ */
 package de.ovgu.spldev.featurecopp.lang.cpp;   
-import java_cup.runtime.*;     
+import java_cup.runtime.*; 
+import java.io.PrintStream;   
 %%
    
 /* -----------------Options and Declarations Section----------------- */
@@ -65,12 +66,20 @@ import java_cup.runtime.*;
     /* Also creates a new java_cup.runtime.Symbol with information
        about the current token, but this object has a value. */
     private Symbol genSymbol(int type, Object value) {
+    	if(isDebug) {
+    		writeTokenStatsTo(System.err, type, value);
+    	}
         return new Symbol(type, yyline + 1, yycolumn + 1, value);
         
     }
+    private void writeTokenStatsTo(PrintStream strm, int type, Object value) {
+    	if(strm == null) {
+    		strm = System.out;
+    	}
+    	strm.println(String.format("Type=[%3d]; Token=[%s]", type, value));
+    }
     
-    private boolean isDebug = false;
-    //private boolean isDebug = true;
+    private boolean isDebug;
 %} 
 
 /*
@@ -108,24 +117,29 @@ https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
 // and for primary exprs. so an 'id' can also occur as argument to macro
 // calls (basically any kind of c-language tokens or macroname), e.g.:
 // SIBYTE_HDR_FEATURE(112x, PASS1) 
-identifier = [A-Za-z0-9_]+
-//identifier = {identifier_nondigit}+({identifier_nondigit}|{digit})*
-//identifier_nondigit = {non_digit} | {universal_character_name} | {implementation_defined}
-//nondigit = [A-Za-z_]
-//digit = [0-9]
-//universal_character_name = {unicodeEscapeSequence} | {unicodeEscapeSequence}
-//implementation_defined = {vms_system_char}
-//vms_system_char = \$
+//identifier = [A-Za-z0-9_]+
+identifier = {identifier_nondigit}+({identifier_nondigit}|{digit})*
+identifier_nondigit = {nondigit} | {universal_character_name} | {implementation_defined}
+nondigit = [A-Za-z_]
+digit = [0-9]
+universal_character_name = {unicodeEscapeSequence} | {unicodeEscapeSequence}
+implementation_defined = {vms_system_char}
+vms_system_char = \$
 
-/** Additional function macro argument lexical hassle (found in gcc,
+/***** FUNCTION MACRO ARGUMENTS *****
+Basically every macro arg is a const
+expr, which we induce within Parser.
+The following are exceptions from, e.g.,
+Clang and GCC, which extend args by
+far from "regular" const exprs:
 e.g., "__has_include (<stdfix-avrlibc.h>)" (cf. gcc-7.3.0 or similar clang header tests)
 e.g., "__has_include__(<complex>)"
 */
 // recognized by macro in macro arg list rule
-funmac_arg_glob_header = "<" [A-Za-z0-9_\-/]+ (\.h)? ">"
-funmac_arg_loc_header = "\"" [A-Za-z0-9_\-/]+ (\.h)? "\""
+funmac_arg_glob_header = \<[A-Za-z0-9_\-/]+(\.h)?\>
+funmac_arg_loc_header = \"[A-Za-z0-9_\-/]+ (\.h)?\"
 // e.g. __has_attribute (gnu::noreturn)
-funmac_arg_namespace = [A-Za-z0-9_::]+
+funmac_arg_namespace = [A-Za-z0-9_:]+
 // e.g. #if __has_include__ "complex.h"
 funmac_no_parentheses = {identifier}\s+({funmac_arg_glob_header}|{funmac_arg_loc_header})
 
@@ -172,258 +186,129 @@ binary_digit = [0-1]
 
 <YYINITIAL> {
 	"#" { // since whitespaces are allowed between hashmark '#' and keyword, we have to analyze syntactically!	
-		if(isDebug) {
-			System.err.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_SHARP, yytext());	
 	}
 	"if"  {
-		if(isDebug) {
-			System.err.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_IF, yytext());
 	}
 	"defined" {
-		if(isDebug) {
-			System.err.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_DEFINED, yytext());
 	}
 	"ifdef"  {
-		if(isDebug) {
-			System.err.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_IFDEF, yytext());
 	}
 	"ifndef"  {
-		if(isDebug) {
-			System.err.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_IFNDEF, yytext());
 	}
 	"elif" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_ELIF, yytext());
 	}
 	"?" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_QM, yytext());		
 	}
 	":" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_COLON, yytext());		
 	}
 	"(" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_LPAR, yytext());		
 	}
 	")" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_RPAR, yytext());
 	}
 	"!" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_LOG_NEG, yytext());
 	}
 	"~" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_TILD, yytext());
 	}	
 	"^" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_CARET, yytext());
 	}	
 	"+" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_PLUS, yytext());
 	}
 	"-" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_MINUS, yytext());
 	}
 	"|" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_PIPE, yytext());
 	}
 	"*" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_TIMES, yytext());
 	}
 	"/" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_DIVIDE, yytext());
 	}
 	"%" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_MOD, yytext());
 	}
 	"&" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_AMP, yytext());
 	}
 	"," {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_COMMA, yytext());
 	}
 	"<<" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_LSHIFT, yytext());
 	}
 	">>" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_RSHIFT, yytext());
 	}
 	"&&" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_LOG_AND, yytext());
 	}
 	"||" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_LOG_OR, yytext());
 	}
 	"<" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_LT, yytext());
 	}
 	">" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_GT, yytext());
 	}	
 	"<=" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_LE, yytext());
 	}	
 	">=" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_GE, yytext());
 	}	
 	"==" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_EQUIV, yytext());
 	}
 	"!=" {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_ANTIV, yytext());
 	}
 	{character_constant} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_CHAR_LIT, yytext());	
 	}	
 	{integer_constant} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_INTEGER_LIT, yytext());	
 	}
 	{identifier} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_IDENTIFIER, yytext());	
 	}
 	{comment} { 
-		if(isDebug) {
-			System.out.print(yytext());
-		}
-		//System.out.println(yyline + 1 + ":[" + yytext() + "]");
 		// syntactically ignored
 	}
 	{directiveLineTerminator} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
-		//System.out.println(yyline + 1 + ":[" + yytext() + "]");
 		// syntactically ignored
 	}
 //	{commentOpening} { 
-//		if(isDebug) {
-//			System.out.print(yytext());
-//		}
-//		System.out.print("O[" + yytext() + "]");
 //		// syntactically ignored
 //	}
 	{whitespace} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		// syntactically ignored
 	}
 	{funmac_arg_glob_header} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_FUNMAC_ARG_GLOB_HEADER, yytext());	
 	}
 	{funmac_arg_loc_header} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_FUNMAC_ARG_LOC_HEADER, yytext());	
 	}
 	{funmac_arg_namespace} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
-		return genSymbol(ExpressionSymbols.T_FUNMAC_ARG_GLOB_HEADER, yytext());	
+		return genSymbol(ExpressionSymbols.T_FUNMAC_ARG_NAMESPACE, yytext());	
 	}
 	{funmac_no_parentheses} {
-		if(isDebug) {
-			System.out.print(yytext());
-		}
 		return genSymbol(ExpressionSymbols.T_FUNMAC_NO_PARENTHESES, yytext());	
 	}
 } // <YYINITIAL>
