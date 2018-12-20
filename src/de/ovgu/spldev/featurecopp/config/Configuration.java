@@ -7,6 +7,8 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
@@ -19,14 +21,38 @@ public class Configuration {
 	public static final String APPLICATION_NAME = "FeatureCoPP";
 	public static final String LINE_SEPARATOR = System.lineSeparator();
 	public static final String EXTRACT_DIR_SUFFIX = "_split";
-	//public static final boolean EXPR_LEX_SHOW_TOKENS = true;
-	public static final boolean EXPR_LEX_SHOW_TOKENS = false;
+	public static final boolean EXPR_LEX_SHOW_TOKENS = true;
+	//public static final boolean EXPR_LEX_SHOW_TOKENS = false;
 	public static final void writeExpressionSymbolsTo(PrintStream strm) throws IllegalArgumentException, IllegalAccessException {
 		if(strm == null) {
 			strm = System.out;
 		}
-		for(Field field : ExpressionSymbols.class. getFields()) {
-			strm.println(field.getName() + "=" + field.getInt(field));
+		Field[] fields = ExpressionSymbols.class. getFields();
+		Arrays.sort(fields, new Comparator<Field>() {
+
+			@Override
+			public int compare(Field l, Field r) {
+				int result = 0;
+				try {
+					int lVal = l.getInt(l);
+					int rVal = r.getInt(r);
+					if(lVal < rVal) {
+						result = -1;
+					} else if(lVal > rVal) {
+						result = 1;
+					} else {
+						result = 0;
+					}
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					System.err.println("Reflection failed: " + e.getMessage());
+				}
+				return result;
+			}
+
+
+		});		
+		for(int i = 0; i < fields.length; i++) {
+			strm.println(String.format("Type=[%3d]->[%s]", i + 1, fields[i].getName()));
 	    }
 	}
 	// TODO remove later for transparent rebase
