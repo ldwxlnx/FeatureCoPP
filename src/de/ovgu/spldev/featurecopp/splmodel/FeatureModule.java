@@ -41,8 +41,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 			throws FileNotFoundException {
 		csp_logger = new Logger();
 		csp_strm = new PrintStream(logfile);
-		csp_logger.setInfoStrms(csp_strm);
-		csp_logger.setFailStrms(csp_strm);
+		csp_logger.addInfoStream(csp_strm).addFailStream(csp_strm);
 	}
 
 	/**

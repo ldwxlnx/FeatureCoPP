@@ -67,22 +67,21 @@ public class Main {
 	public static void split(final Path inputDir,
 			final Pattern requestExprPattern) {
 		try {
-			PrintStream logfile = new PrintStream(Configuration.SPLIT_LOGFILE);
 			Logger logger = new Logger();
-			logger.setInfoStrms(System.out, logfile);
-			logger.setFailStrms(System.err, logfile);
+			logger.addInfoStream(System.out).addRotatedLogFileToAllStreams(
+					Configuration.LOG_FORMAT_SPLIT, Configuration.LOGROTATE_N).addFailStream(System.err);
 			// Logger is ready
 
 			FeatureModule.initCSPLogger(Configuration.CSP_LOGFILE);
 			// CSP logger is ready
 
 			FeatureScopeManager.initASTStrm(Configuration.AST_LOGFILE);
-			
+
 			Configuration.readBlacklist(logger);
 
 			// build absolute path to module/output directory
-			Path outputDir = Filesystem.genPath(inputDir
-					+ Configuration.EXTRACT_DIR_SUFFIX);
+			Path outputDir = Filesystem
+					.genPath(inputDir + Configuration.EXTRACT_DIR_SUFFIX);
 			// likewise with module directory
 			Path moduleDir = Filesystem.genPath(outputDir.toString(),
 					Configuration.MODULE_DIR);
@@ -99,7 +98,8 @@ public class Main {
 			logger.writeInfo("Starting split with"
 					+ (Configuration.SKIP_ANALYSIS ? "out" : "") + " analysis");
 			logger.writeInfo("Feature/SD pattern=" + requestExprPattern);
-			CPPAnalyzer cppAnalyzer = new CPPAnalyzer(Configuration.EXPR_LEX_SHOW_TOKENS, logger, inputDir,
+			CPPAnalyzer cppAnalyzer = new CPPAnalyzer(
+					Configuration.EXPR_LEX_SHOW_TOKENS, logger, inputDir,
 					outputDir, moduleDir, requestExprPattern);
 			long start = Time.getCurrentNanoSecs();
 			// ...and re-create (potentially empty, if nothing processed)
@@ -109,17 +109,18 @@ public class Main {
 
 				Finder.FindParameter fparam = new Finder.FindParameter(
 						inputDir.toString(), TYPE.FILE, 0,
-						Configuration.FIND_PATTERN, Configuration.FIND_PATTERN_STRATEGY, false, false,
+						Configuration.FIND_PATTERN,
+						Configuration.FIND_PATTERN_STRATEGY, false, false,
 						cppAnalyzer);
 				logger.writeInfo(fparam.toString());
 				logger.writeInfo("Processed files: " + Finder.find(fparam));
-				if(Configuration.EXPR_LEX_SHOW_TOKENS) {
+				if (Configuration.EXPR_LEX_SHOW_TOKENS) {
 					Configuration.writeExpressionSymbolsTo(System.err);
 				}
 			} catch (java.nio.file.AccessDeniedException perm_e) {
 				logger.writeFail("Error accessing " + perm_e.getMessage());
 				Configuration.purgeOutputDir(logger, outputDir.toString());
-				logfile.close();
+				logger.closeAllStreams();
 				return;
 			}
 			logger.writeInfo(String.format("Duration: %.3f secs",
@@ -131,12 +132,13 @@ public class Main {
 			logger.writeInfo("Total requested feature count: "
 					+ FeatureTable.calcNumberOfRequestedFeatures());
 
-			logfile.close();
+			logger.closeAllStreams();
 
 			// TODO makes external reporting obsolete?
-			FileWriter xmlOut = new FileWriter(moduleDir + File.separator
-					+ Configuration.XML_REPORT_FILE);
-			logger.writeInfo("Starting write-back of xml output...please wait!");
+			FileWriter xmlOut = new FileWriter(
+					moduleDir + File.separator + Configuration.XML_REPORT_FILE);
+			logger.writeInfo(
+					"Starting write-back of xml output...please wait!");
 			// @formatter:off
 			xmlOut.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"  + Configuration.LINE_SEPARATOR);
 			xmlOut.write("<fcreport>" + Configuration.LINE_SEPARATOR);
@@ -168,19 +170,16 @@ public class Main {
 		// basically insufficient^^ TODO how to identify a valid
 		// compo-annot-project and its original base?
 		if (!inputDir.toString().endsWith(Configuration.EXTRACT_DIR_SUFFIX)) {
-			System.err
-					.println(inputDir
-							+ " is not suffixed with '"
-							+ Configuration.EXTRACT_DIR_SUFFIX
-							+ "' and therefore seems not to be a valid splitted project! Refusing...");
+			System.err.println(inputDir + " is not suffixed with '"
+					+ Configuration.EXTRACT_DIR_SUFFIX
+					+ "' and therefore seems not to be a valid splitted project! Refusing...");
 			return;
 		}
 		PrintStream logfile;
-		try {
-			logfile = new PrintStream(Configuration.MERGE_LOGFILE);
+		try {			
 			Logger logger = new Logger();
-			logger.setInfoStrms(System.out, logfile);
-			logger.setFailStrms(System.err, logfile);
+			logger.addInfoStream(System.out).addRotatedLogFileToAllStreams(
+					Configuration.LOG_FORMAT_MERGE, Configuration.LOGROTATE_N);
 
 			// build absolute path to module/output directory
 			String sOutputDir = inputDir.toString().replaceAll(
@@ -197,12 +196,12 @@ public class Main {
 			Filesystem.deleteDirRecursive(sOutputDir, null);
 
 			// hackish - deduce original project folder from inputDir
-			String origDir = inputDir.toString().replaceAll(
-					Configuration.EXTRACT_DIR_SUFFIX, "");
+			String origDir = inputDir.toString()
+					.replaceAll(Configuration.EXTRACT_DIR_SUFFIX, "");
 
 			// copy original base to output
-			logger.writeInfo("Duplicating original project: " + origDir
-					+ " -> " + outputDir);
+			logger.writeInfo("Duplicating original project: " + origDir + " -> "
+					+ outputDir);
 			Filesystem.copyDirRecursive(origDir.toString(), sOutputDir, null);
 
 			// re-integration -> overwriting of files from orig which are
@@ -211,25 +210,27 @@ public class Main {
 			try {
 				Finder.FindParameter fparam = new Finder.FindParameter(
 						inputDir.toString(), TYPE.FILE, 0,
-						Configuration.FIND_PATTERN, Configuration.FIND_PATTERN_STRATEGY, false, false, merger);
+						Configuration.FIND_PATTERN,
+						Configuration.FIND_PATTERN_STRATEGY, false, false,
+						merger);
 				logger.writeInfo(fparam.toString());
 				logger.writeInfo("Processed files: " + Finder.find(fparam));
 			} catch (java.nio.file.AccessDeniedException perm_e) {
 				logger.writeFail("Error accessing " + perm_e.getMessage());
 				Configuration.purgeOutputDir(logger, outputDir.toString());
-				logfile.close();
+				logger.closeAllStreams();
 				return;
 			} catch (Merger.MergerException me) {
 				logger.writeFail(me.getMessage());
 				Configuration.purgeOutputDir(logger, outputDir.toString());
-				logfile.close();
+				logger.closeAllStreams();
 				return;
 			}
 
 			logger.writeInfo(String.format("Duration: %.3f secs",
 					Time.nano2Sec(Time.elapsedNanoSecs(start))));
 
-			logfile.close();
+			logger.closeAllStreams();
 		} catch (Exception e) {
 			System.err.println(e);
 			e.printStackTrace();
@@ -267,8 +268,11 @@ public class Main {
 				// default is all feature expressions
 				Pattern searchPattern = Pattern.compile(".*");
 				// was search pattern submitted and differs from default
-				// -> since eclipse shell expands ".*" as argument to cwd resulting in a list of entries (.e.g., .classpath, .settings,...) -> strange				
-				if (args.length >= 3 && ! searchPattern.toString().equals(args[2])) {					
+				// -> since eclipse shell expands ".*" as argument to cwd
+				// resulting in a list of entries (.e.g., .classpath,
+				// .settings,...) -> strange
+				if (args.length >= 3
+						&& !searchPattern.toString().equals(args[2])) {
 					searchPattern = Pattern.compile(args[2]);
 				}
 				split(inputDir, searchPattern);

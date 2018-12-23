@@ -65,6 +65,13 @@ public class Configuration {
 	public static final Finder.FindParameter.PatternStrategy FIND_PATTERN_STRATEGY = Finder.FindParameter.PatternStrategy.regex;
 	//public static final String FIND_PATTERN = "*.{c,h}";
 	//public static final Finder.FindParameter.PatternStrategy FIND_PATTERN_STRATEGY = Finder.FindParameter.PatternStrategy.glob;
+	public static final String LOGFILE_PREFIX = APPLICATION_NAME;
+	public static final String LOGFILE_SPLIT_INFIX = "_split";
+	public static final String LOGFILE_MERGE_INFIX = "_merge";
+	public static final String LOGFILE_SUFFIX = "log";
+	public static final String LOG_FORMAT_SPLIT = APPLICATION_NAME + LOGFILE_SPLIT_INFIX + ".%d." + LOGFILE_SUFFIX;
+	public static final String LOG_FORMAT_MERGE = APPLICATION_NAME + LOGFILE_MERGE_INFIX + ".%d." + LOGFILE_SUFFIX;
+	public static final int LOGROTATE_N = 5;
 	public static final String SPLIT_LOGFILE = APPLICATION_NAME + "_split.log";	
 	public static final String CSP_LOGFILE = APPLICATION_NAME + "_csp.log";
 	public static final String AST_LOGFILE = APPLICATION_NAME + "_ast.log";
