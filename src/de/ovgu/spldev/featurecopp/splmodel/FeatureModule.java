@@ -1,10 +1,8 @@
 package de.ovgu.spldev.featurecopp.splmodel;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,13 +16,13 @@ import org.chocosolver.solver.variables.IntVar;
 
 import de.ovgu.spldev.featurecopp.config.Configuration;
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
+import de.ovgu.spldev.featurecopp.lang.CDTParser;
+import de.ovgu.spldev.featurecopp.lang.CDTParser.Stats;
+import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser;
 import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.markup.MarkupLexer;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTree.LogAnd;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTree.Node;
-import de.ovgu.spldev.featurecopp.lang.CDTParser;
-import de.ovgu.spldev.featurecopp.lang.CDTParser.Stats;
-import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser;
 
 /**
  * Aggregates feature expression information in conjunction with feature
@@ -37,12 +35,6 @@ import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser;
  * @author K. Ludwig
  */
 public class FeatureModule implements Comparable<FeatureModule> {
-	public static void initCSPLogger(final String logfile)
-			throws FileNotFoundException {
-		csp_logger = new Logger();
-		csp_strm = new PrintStream(logfile);
-		csp_logger.addInfoStream(csp_strm).addFailStream(csp_strm);
-	}
 
 	/**
 	 * FeatureModules build a total order based on their (natural) amount of
@@ -93,7 +85,8 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * @param moduleDir
 	 *            feature module output directory
 	 */
-	public FeatureModule(final FeatureTree featureExprAST, final Path moduleDir) {
+	public FeatureModule(final FeatureTree featureExprAST,
+			final Path moduleDir) {
 		this.featureExprAST = featureExprAST;
 		this.uid = FeatureModule.nextUID();
 		this.featureModuleFile = makeFeatureModuleFile(moduleDir);
@@ -123,15 +116,17 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	}
 
 	public void writeXmlTo(int indent, FileWriter fw) throws Exception {
-		if (fw != null) {			
+		if (fw != null) {
 			double nd_sum = 0;
 			double nd_n = featureOccurrences.size();
-			for(int i = 0; i < nd_n; i++) {
+			for (int i = 0; i < nd_n; i++) {
 				nd_sum += featureOccurrences.get(i).nestingDepth;
 			}
 			double nd_avg = nd_sum / nd_n;
-			// calculate average and deviation and obtain number of dead features (what the f*** is single responsibility? xD)
-			int numOfDeadFeatures = Configuration.SKIP_ANALYSIS ? -1 : genCommonStats();
+			// calculate average and deviation and obtain number of dead
+			// features (what the f*** is single responsibility? xD)
+			int numOfDeadFeatures = Configuration.SKIP_ANALYSIS ? -1
+					: genCommonStats();
 			// @formatter:off
 			fw.write(String.format(Locale.US, "%" + indent + "s<feature uid=\"%d\""
 					+ " file=\"%s\"" + " requested=\"%b\">%s" // linebreak
@@ -192,14 +187,13 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		long encl_occ_id = relatedFeatureOccurrence.enclosing != null
 				? relatedFeatureOccurrence.enclosing.occ_uid
 				: 0;
-		if(isBlock) {
-			return MarkupLexer.Markup.genBlockOpenMarkup(relatedFeatureOccurrence.occ_uid,
-					encl_occ_id,
+		if (isBlock) {
+			return MarkupLexer.Markup.genBlockOpenMarkup(
+					relatedFeatureOccurrence.occ_uid, encl_occ_id,
 					sourceFile.toString(), directive);
-		}
-		else {
-			return MarkupLexer.Markup.genRefMarkup(relatedFeatureOccurrence.occ_uid,
-					encl_occ_id,
+		} else {
+			return MarkupLexer.Markup.genRefMarkup(
+					relatedFeatureOccurrence.occ_uid, encl_occ_id,
 					featureModuleFile.toString());
 		}
 	}
@@ -224,10 +218,10 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * @throws IOException
 	 *             if open/write fails
 	 */
-//	public void writelnToFeatureFile(final String line) throws IOException {
-//		//writeToFeatureFile(line + Configuration.LINE_SEPARATOR);
-//		writeToFeatureFile(line);
-//	}
+	// public void writelnToFeatureFile(final String line) throws IOException {
+	// //writeToFeatureFile(line + Configuration.LINE_SEPARATOR);
+	// writeToFeatureFile(line);
+	// }
 
 	/**
 	 * Writes String 's' to feature module file. Writing is done in appending
@@ -273,7 +267,8 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * @return newly created FeatureOccurrence
 	 */
 	public FeatureOccurrence addOccurrence(String filename,
-			FeatureOccurrence parent, int lineStart, final FeatureTree ftree, int nestingDepth) {
+			FeatureOccurrence parent, int lineStart, final FeatureTree ftree,
+			int nestingDepth) {
 		FeatureOccurrence fo = null;
 		featureOccurrences.add(fo = new FeatureOccurrence(filename, parent,
 				lineStart, ftree, nestingDepth));
@@ -306,6 +301,10 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		return deadCount;
 	}
 
+	public static void setLogger(final Logger logger) {
+		FeatureModule.logger = logger;
+	}
+
 	/**
 	 * Gathers information for each feature occurrence.
 	 * 
@@ -314,8 +313,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	public static class FeatureOccurrence {
 		public FeatureOccurrence(String filename,
 				final FeatureOccurrence enclosing, int lineStart,
-				final FeatureTree ftree,
-				int nestingDepth) {
+				final FeatureTree ftree, int nestingDepth) {
 			this.filename = filename;
 			this.lineStart = lineStart;
 			this.occ_uid = FeatureOccurrence.nextUID();
@@ -362,6 +360,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		public FeatureTree.Node getClonedFTreeRoot() {
 			return ftree.getRootCloned();
 		}
+
 		public ExpressionParser.ObjMacroHistogram getTDMap() {
 			return ftree.getTDMap();
 		}
@@ -401,7 +400,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		public boolean isDeadFeature() {
 			return isDead;
 		}
-		
+
 		public void setDead() {
 			this.isDead = true;
 		}
@@ -445,8 +444,8 @@ public class FeatureModule implements Comparable<FeatureModule> {
 			// case 2: one enclosing feature exprs (|stack|=1)
 			else if (enclosingFExprs.size() == 1) {
 				// this feature expr AND the one enclosing
-				LogAnd root = new LogAnd(ftree.getRoot(),
-						enclosingFExprs.pop(), "&&");
+				LogAnd root = new LogAnd(ftree.getRoot(), enclosingFExprs.pop(),
+						"&&");
 				conjunctiveExpr = new FeatureTree();
 				conjunctiveExpr.setRoot(root);
 			}
@@ -500,47 +499,34 @@ public class FeatureModule implements Comparable<FeatureModule> {
 					isDead = true;
 				}
 				// write csp results to separate logfile
-				if (csp_strm != null && csp_logger != null) {
-					solver.setOut(csp_strm);
-					solver.setErr(csp_strm);
-					csp_logger.writeInfo("Occurrence-ID: " + occ_uid
-							+ " in line " + lineStart + " in " + filename);
-					csp_logger.writeInfo(conjunctiveExpr.featureExprToString()
-							+ " => " + eval.getValue());
-					if (isDead) {
-						csp_logger.writeFail("Macro settings: "
-								+ macros.toString());
-					} else {
-						csp_logger.writeInfo("Macro settings: "
-								+ macros.toString());
-					}
-					solver.printStatistics();
+				if (logger != null) {
+					logger.writeDebug(
+							String.format("RID#%d Choco={%s} => %d", occ_uid,
+									solver.toOneLineString(), eval.getValue()));
+
+					logger.writeDebug("Macro settings: " + macros.toString());
 				}
 				HashMap<String, String> macroTable = makeMacroTable(macros);
 				// cache stringified solution model and contradiction indicator
-				conjunctiveFExprCache.put(conjunctiveFeatureExpr, macroSettings = new MacroSettings(macroTable, isDead));
-				csp_logger.writeInfo("Caching " + conjunctiveFeatureExpr + " with table: " + macroTable
-						+ " " + (macroTable.isEmpty() ? "(No expansion necessary)" : ""));
+				conjunctiveFExprCache.put(conjunctiveFeatureExpr,
+						macroSettings = new MacroSettings(macroTable, isDead));
+				logger.writeDebug("Caching " + conjunctiveFeatureExpr
+						+ " with table: " + macroTable + " "
+						+ (macroTable.isEmpty() ? "(No expansion necessary)"
+								: ""));
 			}
 			// previously solved!
 			else {
 				// dead as previously solved siblings
-				if(macroSettings.isDead) {
-					this.isDead = macroSettings.isDead; 
-				}
-				csp_logger.writeInfo("Occurrence-ID: " + occ_uid
-						+ " in line " + lineStart + " in " + filename);
-				csp_logger.writeInfo("Previously solved: " + conjunctiveFeatureExpr);
 				if (macroSettings.isDead) {
-					csp_logger.writeFail("Macro settings: "
-							+ macroSettings.macroSettings.toString());
-				} else {
-					csp_logger.writeInfo("Macro settings: "
-							+ macroSettings.macroSettings.toString());
+					this.isDead = macroSettings.isDead;
 				}
+				logger.writeDebug(
+						String.format("RID=%d/Expr=[%s] previously solved",
+								occ_uid, conjunctiveFeatureExpr));
+				logger.writeDebug("Macro settings: "
+						+ macroSettings.macroSettings.toString());
 			}
-			// TODO remove
-			//System.out.println(ftree.featureExprToString() + " => " + conjunctiveExpr.featureExprToString() + " => " + macroSettings.macroSettings);
 			// deliver newly created/cached macro settings
 			return macroSettings.macroSettings;
 		}
@@ -548,6 +534,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		private static synchronized long nextUID() {
 			return ++occ_uid_count;
 		}
+
 		private static long occ_uid_count;
 		/** id of this occurrence */
 		private long occ_uid;
@@ -568,7 +555,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		private FeatureTree ftree;
 		/** availability dead=true|selectable=false */
 		private boolean isDead;
-		/** nesting depth of role (1=top-lvl, 2=1 lvl below top-lvl,...) */ 
+		/** nesting depth of role (1=top-lvl, 2=1 lvl below top-lvl,...) */
 		private int nestingDepth;
 	}
 
@@ -581,7 +568,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 */
 	private File makeFeatureModuleFile(final Path moduleDir) {
 		return new File(moduleDir + File.separator + getUID()
-				+ Configuration.FEATURE_FILE_SUFFIX);
+				+ Configuration.IO_FEATURE_FILE_SUFFIX);
 	}
 
 	/**
@@ -592,18 +579,20 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	private static synchronized long nextUID() {
 		return ++uid_count;
 	}
-	
+
 	private static class MacroSettings {
-		public MacroSettings(HashMap<String, String> macroSettings, boolean isDead) {
+		public MacroSettings(HashMap<String, String> macroSettings,
+				boolean isDead) {
 			this.macroSettings = macroSettings;
 			this.isDead = isDead;
 		}
+
 		public HashMap<String, String> macroSettings;
 		public boolean isDead;
 	}
 
-	private static Logger csp_logger;
-	private static PrintStream csp_strm;
+	// private static Logger csp_logger;
+	// private static PrintStream csp_strm;
 	/** Gathers all feature related occurrences */
 	private ArrayList<FeatureOccurrence> featureOccurrences;
 	/** provides unique id for feature module */
@@ -622,4 +611,6 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	private CDTParser.Stats variance;
 	/** cache already solved macro settings */
 	private static HashMap<String, MacroSettings> conjunctiveFExprCache = new HashMap<String, MacroSettings>();
+	/** logging facility */
+	private static Logger logger;
 }

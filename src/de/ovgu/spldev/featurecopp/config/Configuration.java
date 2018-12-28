@@ -1,156 +1,327 @@
 package de.ovgu.spldev.featurecopp.config;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
 import de.ovgu.spldev.featurecopp.filesystem.Finder;
-import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionSymbols;
 import de.ovgu.spldev.featurecopp.log.Logger;
 
-
 public class Configuration {
-	public static final String APPLICATION_NAME = "FeatureCoPP";
-	public static final String LINE_SEPARATOR = System.lineSeparator();
-	public static final String EXTRACT_DIR_SUFFIX = "_split";
-	public static final boolean EXPR_LEX_SHOW_TOKENS = true;
-	//public static final boolean EXPR_LEX_SHOW_TOKENS = false;
-	public static final void writeExpressionSymbolsTo(PrintStream strm) throws IllegalArgumentException, IllegalAccessException {
-		if(strm == null) {
-			strm = System.out;
-		}
-		Field[] fields = ExpressionSymbols.class. getFields();
-		Arrays.sort(fields, new Comparator<Field>() {
-
-			@Override
-			public int compare(Field l, Field r) {
-				int result = 0;
-				try {
-					int lVal = l.getInt(l);
-					int rVal = r.getInt(r);
-					if(lVal < rVal) {
-						result = -1;
-					} else if(lVal > rVal) {
-						result = 1;
-					} else {
-						result = 0;
-					}
-				} catch (IllegalArgumentException | IllegalAccessException e) {
-					System.err.println("Reflection failed: " + e.getMessage());
-				}
-				return result;
-			}
-
-
-		});		
-		for(int i = 0; i < fields.length; i++) {
-			strm.println(String.format("Type=[%3d]->[%s]", i + 1, fields[i].getName()));
-	    }
+	public static enum Mode {
+		split, asplit, report, areport, merge
 	}
+
+	public static final class ConfigurationException extends Exception {
+		/**
+		 * gen uuid
+		 */
+		private static final long serialVersionUID = -4184219604556838621L;
+
+		public ConfigurationException(String msg) {
+			super(msg);
+		}
+	}
+
+	public static final UserConf getDefault() {
+		return DEFAULT_CONFIG;
+	}
+
+	public static final class UserConf implements Comparable<UserConf> {
+		public UserConf(String name, UserConf parent) {
+			this.name = name;
+			this.parent = parent;
+			uid = nextUid++;
+		}
+
+		private UserConf(String name, Path inputDirectory,
+				String filePattern, String macroPattern, Path logDirectory,
+				String logPrefix, Integer logRotateN, Boolean makeDebugOutput,
+				Mode mode, UserConf parent) {
+			this.name = name;
+			this.inputDirectory = inputDirectory;
+			this.filePattern = filePattern;
+			this.macroPattern = Pattern.compile(macroPattern);
+			this.logDirectory = logDirectory;
+			this.logPrefix = logPrefix;
+			this.logRotateN = logRotateN;
+			this.makeDebugOutput = makeDebugOutput;
+			this.mode = mode;
+			this.parent = parent;
+			uid = nextUid++;
+		}
+		@Override
+		public int compareTo(UserConf other) {
+			if(uid < other.uid) {
+				return -1;
+			}
+			else if(uid > other.uid) {
+				return 1;
+			}
+			else {
+				return 0;
+			}
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			boolean equals = false;
+			if (this == other) {
+				equals = true;
+			} else if (other instanceof UserConf) {
+				equals = this.name.equals(((UserConf) other).name);
+			}
+			return equals;
+		}
+
+		@Override
+		public int hashCode() {
+			return name.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			// with parent
+			return String.format(
+					"{name=\"%s\";uid=%d;overridden=%b;input=\"%s\";output=\"%s\";%s;filepattern=\"%s\";macropattern=\"%s\";"
+							+ "logformat=\"%s\";logrotate=\"%d\";debug=\"%b\";mode=\"%s\";blacklist=\"%s\";}",
+					name, uid, isOverridden, inputDirectory, getOutputDirectory(),
+					mode == Mode.merge ? 
+							String.format("original=\"%s\"", getOriginalDirectory()) :String.format("modules=\"%s\"", getModuleDirectory()),
+					filePattern, macroPattern, getLogFormat(), logRotateN,
+					makeDebugOutput, mode, blacklist);
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public Path getInputDirectory() {
+			return inputDirectory;
+		}
+
+		public void setInputDirectory(String inputDirectory) {
+			this.inputDirectory = Filesystem.genPath(inputDirectory);
+		}
+
+		public Path getOutputDirectory() {
+			Path outputDirectory = Filesystem.genPath(String.format("%s_%s",
+					inputDirectory.toString(), mode == Configuration.Mode.merge ? IO_MERGE_DIR_SUFFIX
+									: IO_SPLIT_DIR_SUFFIX));
+			return outputDirectory;
+		}
+
+		public Path getModuleDirectory() {
+			return Filesystem.genPath(getOutputDirectory().toString(), IO_MODULE_DIR);
+		}
+
+		public String getFilePattern() {
+			return filePattern;
+		}
+
+		public void setFilePattern(String filePattern) {
+			this.filePattern = filePattern;
+		}
+
+		public Pattern getMacroPattern() {
+			return macroPattern;
+		}
+
+		public void setMacroPattern(String macroPattern) {
+			this.macroPattern = Pattern.compile(macroPattern);
+		}
+
+		public void setLogDirectory(String logDirectory) {
+			this.logDirectory = Filesystem.genPath(logDirectory);
+		}
+
+		public Path getLogDirectory() {
+			return logDirectory;
+		}
+
+		public void setLogPrefix(String logPrefix) {
+			this.logPrefix = logPrefix;
+		}
+
+		public String getLogPrefix() {
+			return logPrefix;
+		}
+
+		public String getLogFormat() {
+			return String.format("%s%s%s_%s.%%d.%s", logDirectory,
+					Filesystem.DIR_SEPARATOR, logPrefix, name,
+					Configuration.LOGFILE_SUFFIX);
+		}
+
+		public void setLogRotateN(int logRotateN) {
+			this.logRotateN = logRotateN;
+		}
+
+		public int getLogRotateN() {
+			return logRotateN;
+		}
+
+		public boolean isMakeDebugOutput() {
+			return makeDebugOutput;
+		}
+
+		public void setMakeDebugOutput(boolean makeDebugOutput) {
+			this.makeDebugOutput = makeDebugOutput;
+		}
+
+		public Mode getMode() {
+			return mode;
+		}
+
+		public void setMode(Mode mode) {
+			this.mode = mode;
+		}
+
+		public boolean isOverriden() {
+			return isOverridden;
+		}
+
+		public void setIsOverridden(boolean isOverridden) {
+			this.isOverridden = isOverridden;
+		}
+		public void setOriginalDirectory(String originalDirectory) {
+			this.originalDirectory = Filesystem.genPath(originalDirectory);
+		}
+		public Path getOriginalDirectory() {
+			return originalDirectory;			
+		}
+		public void addToBlackList(String file) {
+			Path absoluteFile = Filesystem.genPath(file).normalize();
+			// only existing files are added -> save memory
+			if(absoluteFile.toFile().isFile()) {
+				blacklist.put(absoluteFile, absoluteFile.toString());
+			}
+		}
+		public boolean isBlackListed(Path file) {
+			return blacklist.get(file) != null;
+		}
+
+		protected void fixateBindings()
+				throws IllegalArgumentException, IllegalAccessException,
+				NoSuchFieldException, SecurityException {
+			// for each private field, resolve and fixate value binding
+			for (Field field : getClass().getDeclaredFields()) {
+				// relax private fields for reflection only
+				field.setAccessible(true);
+				// search local -> global -> default for set value
+				field.set(this, evaluateField(field));
+			}
+		}
+
+		private Object evaluateField(Field field)
+				throws IllegalArgumentException, IllegalAccessException,
+				NoSuchFieldException, SecurityException {
+			Object value = null;
+			UserConf currConf = this;
+			// walk along config hierarchy
+			while (currConf != null) {
+				value = field.get(currConf);
+				// System.out.println(currConf.getName() + "::" + field +
+				// "->" + value + " #parent=" + parent);
+				// value set?
+				if (value != null) {
+					break;
+				}
+				// look up in parent
+				currConf = currConf.parent;
+			}
+			// at least default config value was found on top of hierarchy
+			return value;
+		}
+
+		/** config name, which is used as log infix name */
+		private String name;
+		/** source project directory */
+		private Path inputDirectory;
+		/** only set for nerge modes - source of original project */
+		private Path originalDirectory;
+		private String filePattern;
+		private Pattern macroPattern;
+		private Path logDirectory;
+		private String logPrefix;
+		private Integer logRotateN;
+		private Boolean makeDebugOutput;
+		private Mode mode;
+		private UserConf parent;
+		private boolean isOverridden;
+		/** to sort by occurrence */
+		private int uid;
+		private static int nextUid;
+		private HashMap<Path, String> blacklist = new HashMap<>();
+	}
+
+	/* APPLICATION */
+	public static final String APPLICATION_NAME = "FeatureCoPP";
+	/* PLATFORM */
+	public static final String LINE_SEPARATOR = System.lineSeparator();
+	/* CONFIGURATION */
+	private static final String CONF_DEFAULT_NAME = "default";
+
+	/* I/O */
+	/** current working directory is default - data is read from */
+	private static final Path IO_DEFAULT_INPUT_DIR = Filesystem.genPath(System.getProperty("user.dir"));
+	private static final String IO_SPLIT_DIR_SUFFIX = "split";
 	// TODO remove later for transparent rebase
-	public static final String MERGE_DIR_SUFFIX = "_merged";
-	public static final String MODULE_DIR = "___" + APPLICATION_NAME + "_modules";
+	private static final String IO_MERGE_DIR_SUFFIX = "merged";
+	public static final String IO_MODULE_DIR = String.format("___%s_modules", APPLICATION_NAME);
+	public static final int IO_MERGE_READER_BUFFER = 8192;
 	/** what kind of files should be located */
-	//public static final String FIND_PATTERN = "*.{c,cpp,h,hpp,l,y}";
 	// for syntax, see Finder -> FileSystems.getDefault().getPathMatcher
-	public static final String FIND_PATTERN = "^(\\w|-)+\\.[hc]";
+	private static final String IO_FIND_PATTERN = "^(\\w|-)+\\.[hc]";
+	public static final String IO_FEATURE_FILE_SUFFIX = ".fcp";
 	public static final Finder.FindParameter.PatternStrategy FIND_PATTERN_STRATEGY = Finder.FindParameter.PatternStrategy.regex;
-	//public static final String FIND_PATTERN = "*.{c,h}";
-	//public static final Finder.FindParameter.PatternStrategy FIND_PATTERN_STRATEGY = Finder.FindParameter.PatternStrategy.glob;
-	public static final String LOGFILE_PREFIX = APPLICATION_NAME;
-	public static final String LOGFILE_SPLIT_INFIX = "_split";
-	public static final String LOGFILE_MERGE_INFIX = "_merge";
-	public static final String LOGFILE_SUFFIX = "log";
-	public static final String LOG_FORMAT_SPLIT = APPLICATION_NAME + LOGFILE_SPLIT_INFIX + ".%d." + LOGFILE_SUFFIX;
-	public static final String LOG_FORMAT_MERGE = APPLICATION_NAME + LOGFILE_MERGE_INFIX + ".%d." + LOGFILE_SUFFIX;
-	public static final int LOGROTATE_N = 5;
-	public static final String SPLIT_LOGFILE = APPLICATION_NAME + "_split.log";	
-	public static final String CSP_LOGFILE = APPLICATION_NAME + "_csp.log";
-	public static final String AST_LOGFILE = APPLICATION_NAME + "_ast.log";
-	public static final String MERGE_LOGFILE = APPLICATION_NAME + "_merge.log";
-	public static final String XML_REPORT_FILE = APPLICATION_NAME + "_report.xml"; 
-	public static final String XML_INDENT_WHITESPACE = " "; // change to "\t" here if necessary (bloat)
+	// public static final String FIND_PATTERN = "*.{c,h}";
+	// public static final Finder.FindParameter.PatternStrategy
+	// FIND_PATTERN_STRATEGY = Finder.FindParameter.PatternStrategy.glob;
+	/* LOGGING */
+	private static final Path LOGFILE_DEFAULTDIR = Filesystem.genPath(".");
+	private static final String LOGFILE_PREFIX = APPLICATION_NAME;
+	private static final String LOGFILE_SUFFIX = "log";
+	private static final int LOGROTATE_N = 3;
+	/* XML REPORT */
+	public static final String XML_REPORT_FILE = APPLICATION_NAME
+			+ "_report.xml";
+	public static final String XML_INDENT_WHITESPACE = " "; // change to "\t"
+															// here if necessary
+															// (bloat)
 	public static final char CSV_DELIMITER = ';';
-	public static final String FEATURE_FILE_SUFFIX = ".fcp";
-	public static final String FIND_GLOB_FEATUREFILE_PATTERN = "*" + FEATURE_FILE_SUFFIX;
-	public static final String CSP_TIMELIMIT = "5s"; // after which time period solving should be quit (prevent memory overflows but incomplete results!)
+	// TODO inappropriate regex?
+	// public static final String FIND_GLOB_FEATUREFILE_PATTERN = "*"
+	// + FEATURE_FILE_SUFFIX;
+	public static final String CSP_TIMELIMIT = "5s"; // after which time period
+														// solving should be
+														// quit (prevent memory
+														// overflows but
+														// incomplete results!)
 	public static final String HISTOGRAM_KEY_NAME = "FeatureOccurrence";
 	public static final String HISTOGRAM_VAL_NAME = "Count";
-	public static final int MERGE_READER_BUFFER = 8192;
+	/* BEHAVIOR */
+	private static final boolean BHV_DEFAULT_USEDEBUG = false;
+	private static final String BHV_DEFAULT_MACRO_PATTERN = ".*";
+	private static final Mode BHV_DEFAULT_MODE = Mode.report;
 	/** configurable by user */
 	public static boolean SKIP_ANALYSIS = true;
-	/** no physical separation? xml journal only!*/
+	/** no physical separation? xml journal only! */
 	public static boolean REPORT_ONLY;
-	public static final String BLACKLIST_FILE = "conf.d/blacklist.conf";
-	/** files, which cannot be processed due lexical ambiguities, e.g., assembler (not inline) with conditionals
-	 * or asymmetric conditional directive usage.
-	 * values only for explanatory reasons (programatically unused)
-	 * TODO blacklist file, editable by user*/
-	private static HashMap<Path, String> BLACKLIST = new HashMap<Path, String>();
-	public static final void readBlacklist(Logger logger) throws Exception {
-		File blFile = new File(BLACKLIST_FILE);
-		if(! blFile.isFile()) {
-			return;
-		}
-		BufferedReader br = new BufferedReader(new FileReader(blFile));
-		String line = null;
-		while((line = br.readLine()) != null) {
-			// ignore comments
-			if(! line.startsWith("#")) {
-				Path blacklistFile = Filesystem.genPath(line);
-				// does blacklisted file exist? prevent from malformed entries (but not invalid priviledges!)
-				if(blacklistFile.toFile().exists()) {
-					logger.writeInfo("Adding file " + line + " to blacklist.");
-					BLACKLIST.put(blacklistFile, line);
-				}
-				// to subtle to review in logs -- so exit, to assist and discipline user
-//				else {
-//					br.close();
-//					throw new Exception("File " + blacklistFile + " does not exist! Refused blacklisting...");
-//				}
-			}
-		}
-		br.close();
-	}
-	public static final String isBlacklisted(Path fso) {
-		return BLACKLIST.get(fso);
-	}
-	
-//	static {// TODO matching by key eliminates further, identically named files
-//		// cond dirs in pure assembler -- lexical ambiguities introduced in comments
-//		BLACKLIST.put("entry-arcv2.h", "\\linux-4.10.4\\arch\\arc\\include\\asm\\entry-arcv2.h");
-//		BLACKLIST.put("tlb-mmu1.h", "linux-4.10.4\\arch\\arc\\include\\asm\\tlb-mmu1.h");
-//		// asymmetric
-//		BLACKLIST.put("alloca.h", "gcc-7.3.0\\fixincludes\\tests\\base\\alloca.h");
-//		BLACKLIST.put("math.h", "gcc-7.3.0\\fixincludes\\tests\\base\\architecture\\ppc\\math.h");
-//		BLACKLIST.put("AvailabilityMacros.h", "gcc-7.3.0\\fixincludes\\tests\\base\\AvailabilityMacros.h");
-//		BLACKLIST.put("ctype.h", "gcc-7.3.0\\fixincludes\\tests\\base\\ctype.h");
-//		BLACKLIST.put("hsfs_spec.h", "gcc-7.3.0\\fixincludes\\tests\\base\\hsfs\\hsfs_spec.h");
-//		BLACKLIST.put("stdio_iso.h", "gcc-7.3.0\\fixincludes\\tests\\base\\iso\\stdio_iso.h");
-//		BLACKLIST.put("stdlib_iso.h", "gcc-7.3.0\\fixincludes\\tests\\base\\iso\\stdlib_iso.h");
-//		BLACKLIST.put("malloc.h", "gcc-7.3.0\\fixincludes\\tests\\base\\malloc.h");
-//		BLACKLIST.put("decc$types.h", "gcc-7.3.0\\fixincludes\\tests\\base\\rtldef\\decc$types.h");
-//		BLACKLIST.put("setjmp.h", "gcc-7.3.0\\fixincludes\\tests\\base\\rtldef\\setjmp.h");
-//		BLACKLIST.put("string.h", "gcc-7.3.0\\fixincludes\\tests\\base\\rtldef\\string.h");
-//		BLACKLIST.put("stdio.h", "gcc-7.3.0\\fixincludes\\tests\\base\\stdio.h");
-//		BLACKLIST.put("stdio_tag.h", "gcc-7.3.0\\fixincludes\\tests\\base\\stdio_tag.h");
-//		BLACKLIST.put("stdlib.h", "gcc-7.3.0\\fixincludes\\tests\\base\\stdlib.h");
-//		BLACKLIST.put("cdefs.h", "gcc-7.3.0\\fixincludes\\tests\\base\\sys\\cdefs.h");
-//		BLACKLIST.put("socket.h", "gcc-7.3.0\\fixincludes\\tests\\base\\sys\\socket.h");
-//		BLACKLIST.put("testing.h", "gcc-7.3.0\\fixincludes\\tests\\base\\sys\\testing.h");
-//	}
-	
-	public static void purgeOutputDir(Logger logger, String outputDir) throws Exception {
+
+
+	public static void purgeOutputDir(Logger logger, String outputDir)
+			throws Exception {
 		logger.writeInfo("Deleting " + outputDir + " ...");
 		logger.flushAllStrms();
 		Filesystem.deleteDirRecursive(outputDir, null);
 	}
+
+	private final static UserConf DEFAULT_CONFIG = new UserConf(
+			CONF_DEFAULT_NAME, IO_DEFAULT_INPUT_DIR,
+			IO_FIND_PATTERN, BHV_DEFAULT_MACRO_PATTERN, LOGFILE_DEFAULTDIR,
+			LOGFILE_PREFIX, LOGROTATE_N, BHV_DEFAULT_USEDEBUG, BHV_DEFAULT_MODE,
+			null);
 }

@@ -1,7 +1,11 @@
 /* --------------------------Usercode Section------------------------ */
 package de.ovgu.spldev.featurecopp.lang.cpp;   
 import java_cup.runtime.*; 
-import java.io.PrintStream;   
+import java.io.PrintStream;  
+import java.util.Arrays;
+import java.util.Comparator;
+import java.lang.reflect.Field;
+import de.ovgu.spldev.featurecopp.log.Logger;
 %%
    
 /* -----------------Options and Declarations Section----------------- */
@@ -11,7 +15,7 @@ import java.io.PrintStream;
    Will write the code to the file Lexer.java. 
 */
 %class ExpressionLexer
-
+%public
 /*
   The current line number can be accessed with the variable yyline
   and the current column number with the variable yycolumn.
@@ -33,13 +37,45 @@ import java.io.PrintStream;
   scanner actions.  
 */
 %{	
-	ExpressionLexer(boolean isDebug, java.io.Reader in) {
+	ExpressionLexer(Logger logger, java.io.Reader in) {
 		this(in);
-		this.isDebug = isDebug;
+		this.logger = logger;
 	}
 	/** Reusable Lexer with changing java.io.Readers*/
 	ExpressionLexer() {
 
+	}
+	public static final void writeExpressionSymbolsToLog(Logger logger)
+			throws IllegalArgumentException, IllegalAccessException {
+		Field[] fields = ExpressionSymbols.class.getFields();
+		Arrays.sort(fields, new Comparator<Field>() {
+
+			@Override
+			public int compare(Field l, Field r) {
+				int result = 0;
+				try {
+					int lVal = l.getInt(l);
+					int rVal = r.getInt(r);
+					if (lVal < rVal) {
+						result = -1;
+					} else if (lVal > rVal) {
+						result = 1;
+					} else {
+						result = 0;
+					}
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					System.err.println("Reflection failed: " + e.getMessage());
+				}
+				return result;
+			}
+
+		});
+		for (int i = 0; i < fields.length; i++) {
+			if(logger != null) {
+				logger.writeDebug(String.format("Type=[%3d]->[%s]", i + 1,
+					fields[i].getName()));
+			}
+		}
 	}
 	
 	public static class ExpressionLexerException extends Exception {
@@ -50,11 +86,8 @@ import java.io.PrintStream;
 	public void setReader(java.io.Reader in) {
 		zzReader = in;
 	}
-	/**
-	 * if true, enables debug output, silencing otherwise
-	 */
-	public void debug(boolean isDebug) {
-		this.isDebug = isDebug;
+	public void setLogger(Logger logger) {
+		this.logger = logger;
 	}
     /* To create a new java_cup.runtime.Symbol with information about
        the current token, the token will have no value in this
@@ -66,20 +99,16 @@ import java.io.PrintStream;
     /* Also creates a new java_cup.runtime.Symbol with information
        about the current token, but this object has a value. */
     private Symbol genSymbol(int type, Object value) {
-    	if(isDebug) {
-    		writeTokenStatsTo(System.err, type, value);
-    	}
+    	writeTokenStatsTo(type, value);
         return new Symbol(type, yyline + 1, yycolumn + 1, value);
         
     }
-    private void writeTokenStatsTo(PrintStream strm, int type, Object value) {
-    	if(strm == null) {
-    		strm = System.out;
+    private void writeTokenStatsTo(int type, Object value) {
+    	if(logger != null) {
+    		logger.writeDebug(String.format("Type=[%3d]; Token=[%s]", type, value));
     	}
-    	strm.println(String.format("Type=[%3d]; Token=[%s]", type, value));
     }
-    
-    private boolean isDebug;
+    private Logger logger;
 %} 
 
 /*
@@ -107,7 +136,7 @@ documentationComment = "/**" {commentContent} "*"+ "/"
 commentContent       = ( [^*] | \*+ [^/*] )*
 
 /****** IDENTIFIERS ******
-C11 n1570 §6.4.2.1, p.59ff
+C11 n1570 ï¿½6.4.2.1, p.59ff
 see also:
 https://en.cppreference.com/w/c/language/identifier
 https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
@@ -144,7 +173,7 @@ funmac_arg_namespace = [A-Za-z0-9_:]+
 funmac_no_parentheses = {identifier}\s+({funmac_arg_glob_header}|{funmac_arg_loc_header})
 
 /****** CHARACTERS ********
- C11 n1570 §6.4.4.4, p. 67
+ C11 n1570 ï¿½6.4.4.4, p. 67
  **************************/
 character_constant = {c_char_prefix}?'{c_char_sequence}'
 c_char_prefix = u8 | [LuU]
@@ -158,7 +187,7 @@ unicodeEscapeSequence = \\u{hexadecimal_digit}{4,4}
 UnicodeEscapeSequence = \\U{hexadecimal_digit}{8,8}
 
 /****** INTEGERS **********
- C11 n1570 §6.4.4.1, p. 62
+ C11 n1570 ï¿½6.4.4.1, p. 62
  see also: http://en.cppreference.com/w/cpp/language/integer_literal
  TODO: C++14 "Optional single quotes(') may be inserted between the digits as a separator. They are ignored by the compiler."
  **************************/

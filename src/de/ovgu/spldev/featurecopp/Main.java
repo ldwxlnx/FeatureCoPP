@@ -1,18 +1,25 @@
 package de.ovgu.spldev.featurecopp;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
+import de.ovgu.spldev.featurecopp.config.ConfigParserDriver;
 import de.ovgu.spldev.featurecopp.config.Configuration;
+import de.ovgu.spldev.featurecopp.config.Configuration.UserConf;
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
 import de.ovgu.spldev.featurecopp.filesystem.Finder;
 import de.ovgu.spldev.featurecopp.filesystem.Finder.TYPE;
 import de.ovgu.spldev.featurecopp.io.Merger;
 import de.ovgu.spldev.featurecopp.lang.cpp.CPPAnalyzer;
+import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionLexer;
 import de.ovgu.spldev.featurecopp.lang.cpp.FeatureScopeManager;
 import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.splmodel.ElifTree;
@@ -31,60 +38,32 @@ public class Main {
 	/**
 	 * Show help screen
 	 */
-	public static void usage() {
+	public static void usage(UserConf defaultConf) {
 		// TODO if more complex, use cli-arg-parser lib
 		// @formatter:off
-		System.out.println("usage: java -jar " + Configuration.APPLICATION_NAME + ".jar --(a)split[inputdir][expr-regex]|--merge[inputdir]|[--report]|[-areport]|[--help]");
+		System.out.println("usage: java -jar " + Configuration.APPLICATION_NAME + ".jar [--config=\"/path/to/config\"|--help]");
 		System.out.println("--help:  shows this screen");
-		System.out.println("--split: extracts preprocessor controlled code of conditional directives from all files within");
-		System.out.println("--asplit: behaves like --split but performs additional statistical syntax analysis of controlled code");
-		System.out.println("\t'inputdir' and writes them back to 'inputdir" + Configuration.EXTRACT_DIR_SUFFIX + "'.");
-		System.out.println("\tAdditionally a comprehensive analysis report is written as XML file:");
-		System.out.println("\t'inputdir"
-				+ Configuration.EXTRACT_DIR_SUFFIX + File.separator
-				+ Configuration.MODULE_DIR + "'" + File.separator
-				+ Configuration.XML_REPORT_FILE);
-		System.out.println("\t'expr-regex': denotes a java regex which should match a class of feature expressions.");
-		System.out.println("\t\tdefault: .* (all found feature expressions)");
-		System.out.println("\t\texample: CONFIG_\\w+ finds all expression containing macro CONFIG succeeded by arbitrary alphanumeric characters.");
-		System.out.println("\t\tNote! Quote '.*' to prevent certain shells from automatic directory expansion.");
-		System.out.println("\t\texample: #else.* finds all expression containing #else-directives succeeded by arbitrary symbols.");
-		System.out.println("--merge: performs vice versa, i.e. merges extracted controlled code into one code base.");
-		System.out.println();
-		System.out.println("If 'input_dir' is omitted current directory '.' is assumed.");
-		System.out.println();
-		System.out.println("For any found c-preprocessor conditionals the respective");
-		System.out.println("controlled code is written to 'inputdir" + Configuration.EXTRACT_DIR_SUFFIX
-				+ File.separator + Configuration.MODULE_DIR + "'");
-		System.out.println("as follows: filename ::= unique_module_id \".fcp\"");
-		System.out.println("For later inspection of the transformation process a log is");
-		System.out.println("written to: " + Configuration.SPLIT_LOGFILE);
-		System.out.println("--areport/report: performs read only run on source and creates the above mentioned XML report with or wothout analysis,");
-		System.out.println("\t i.e. behaves like --asplit/split without physical separation");
+		System.out.println("--config: performs processing for each configuration setting");
+		System.out.println("In case " + Configuration.APPLICATION_NAME + " was invoked without any arguments,");
+		System.out.println("a single processing based on the default configuration is performed, i.e.:");
+		System.out.println(defaultConf);
 		// @formatter:on
 	}
 
-	public static void split(final Path inputDir,
-			final Pattern requestExprPattern) {
+	public static Void split(final UserConf config) {
 		try {
 			Logger logger = new Logger();
-			logger.addInfoStream(System.out).addRotatedLogFileToAllStreams(
-					Configuration.LOG_FORMAT_SPLIT, Configuration.LOGROTATE_N).addFailStream(System.err);
+			if(config.isMakeDebugOutput()) {
+				logger.useDebug();
+			}
+			logger.addInfoStream(System.out)
+					.addRotatedLogFileToAllStreams(config.getLogFormat(),
+							config.getLogRotateN())
+					.addFailStream(System.err).addDebugStream(System.out);
 			// Logger is ready
-
-			FeatureModule.initCSPLogger(Configuration.CSP_LOGFILE);
-			// CSP logger is ready
-
-			FeatureScopeManager.initASTStrm(Configuration.AST_LOGFILE);
-
-			Configuration.readBlacklist(logger);
-
-			// build absolute path to module/output directory
-			Path outputDir = Filesystem
-					.genPath(inputDir + Configuration.EXTRACT_DIR_SUFFIX);
-			// likewise with module directory
-			Path moduleDir = Filesystem.genPath(outputDir.toString(),
-					Configuration.MODULE_DIR);
+			logger.writeInfo("Starting split with"
+					+ (Configuration.SKIP_ANALYSIS ? "out" : "") + " analysis");
+			logger.writeInfo(String.format("Conf=%s", config));			
 
 			// remove output of previous runs -- set logger to null to
 			// circumvent logging blowout
@@ -92,37 +71,36 @@ public class Main {
 			// previous
 			// cleanup is necessary
 			// - error message if dir non-existent can be ignored
-			logger.writeInfo("Deleting " + outputDir.toString() + " ...");
-			Filesystem.deleteDirRecursive(outputDir.toString(), null);
+			logger.writeInfo("Deleting "
+					+ config.getOutputDirectory().toString() + " ...");
+			Filesystem.deleteDirRecursive(
+					config.getOutputDirectory().toString(), null);
 
-			logger.writeInfo("Starting split with"
-					+ (Configuration.SKIP_ANALYSIS ? "out" : "") + " analysis");
-			logger.writeInfo("Feature/SD pattern=" + requestExprPattern);
-			CPPAnalyzer cppAnalyzer = new CPPAnalyzer(
-					Configuration.EXPR_LEX_SHOW_TOKENS, logger, inputDir,
-					outputDir, moduleDir, requestExprPattern);
+			logger.writeInfo("Feature/SD pattern=" + config.getMacroPattern());
+			CPPAnalyzer cppAnalyzer = new CPPAnalyzer(logger, config);
 			long start = Time.getCurrentNanoSecs();
 			// ...and re-create (potentially empty, if nothing processed)
 			try {
-				Filesystem.makePath(outputDir);
-				Filesystem.makePath(moduleDir);
+				Filesystem.makePath(config.getOutputDirectory());
+				Filesystem.makePath(config.getModuleDirectory());
 
 				Finder.FindParameter fparam = new Finder.FindParameter(
-						inputDir.toString(), TYPE.FILE, 0,
-						Configuration.FIND_PATTERN,
+						config.getInputDirectory().toString(), TYPE.FILE, 0,
+						config.getFilePattern(),
 						Configuration.FIND_PATTERN_STRATEGY, false, false,
 						cppAnalyzer);
 				logger.writeInfo(fparam.toString());
 				logger.writeInfo("Processed files: " + Finder.find(fparam));
-				if (Configuration.EXPR_LEX_SHOW_TOKENS) {
-					Configuration.writeExpressionSymbolsTo(System.err);
+				if (config.isMakeDebugOutput()) {
+					ExpressionLexer.writeExpressionSymbolsToLog(logger);
 				}
-			} catch (java.nio.file.AccessDeniedException perm_e) {
-				logger.writeFail("Error accessing " + perm_e.getMessage());
-				Configuration.purgeOutputDir(logger, outputDir.toString());
+			} catch (IOException e) {				
+				logger.writeFail(String.format("Could not access %s", e.getMessage()));
+				Configuration.purgeOutputDir(logger,
+						config.getOutputDirectory().toString());
 				logger.closeAllStreams();
-				return;
-			}
+				return null;
+			} 
 			logger.writeInfo(String.format("Duration: %.3f secs",
 					Time.nano2Sec(Time.elapsedNanoSecs(start))));
 			// TODO
@@ -135,8 +113,8 @@ public class Main {
 			logger.closeAllStreams();
 
 			// TODO makes external reporting obsolete?
-			FileWriter xmlOut = new FileWriter(
-					moduleDir + File.separator + Configuration.XML_REPORT_FILE);
+			FileWriter xmlOut = new FileWriter(config.getModuleDirectory()
+					+ File.separator + Configuration.XML_REPORT_FILE);
 			logger.writeInfo(
 					"Starting write-back of xml output...please wait!");
 			// @formatter:off
@@ -164,67 +142,56 @@ public class Main {
 			System.err.println(e);
 			e.printStackTrace();
 		}
+		return null;
 	}
 
-	public static void merge(final Path inputDir) {
-		// basically insufficient^^ TODO how to identify a valid
-		// compo-annot-project and its original base?
-		if (!inputDir.toString().endsWith(Configuration.EXTRACT_DIR_SUFFIX)) {
-			System.err.println(inputDir + " is not suffixed with '"
-					+ Configuration.EXTRACT_DIR_SUFFIX
-					+ "' and therefore seems not to be a valid splitted project! Refusing...");
-			return;
-		}
-		PrintStream logfile;
-		try {			
+	public static Void merge(final UserConf config) {
+		try {
 			Logger logger = new Logger();
-			logger.addInfoStream(System.out).addRotatedLogFileToAllStreams(
-					Configuration.LOG_FORMAT_MERGE, Configuration.LOGROTATE_N);
-
-			// build absolute path to module/output directory
-			String sOutputDir = inputDir.toString().replaceAll(
-					Configuration.EXTRACT_DIR_SUFFIX,
-					Configuration.MERGE_DIR_SUFFIX);
-			Path outputDir = Filesystem.genPath(sOutputDir);
+			if(config.isMakeDebugOutput()) {
+				logger.useDebug();
+			}
+			logger.addInfoStream(System.out)
+					.addRotatedLogFileToAllStreams(config.getLogFormat(),
+							config.getLogRotateN())
+					.addFailStream(System.err).addDebugStream(System.out);
 
 			// logger is ready
-			logger.writeInfo("Starting merge for " + inputDir);
-			Merger merger = new Merger(logger, inputDir, outputDir);
+			logger.writeInfo(
+					"Starting merge for " + config.getInputDirectory());
+			logger.writeInfo(String.format("Conf=%s", config));
+			Merger merger = new Merger(logger, config.getInputDirectory(),
+					config.getOutputDirectory());
 
 			// removing old output directory
-			logger.writeInfo("Deleting " + outputDir);
-			Filesystem.deleteDirRecursive(sOutputDir, null);
-
-			// hackish - deduce original project folder from inputDir
-			String origDir = inputDir.toString()
-					.replaceAll(Configuration.EXTRACT_DIR_SUFFIX, "");
+			logger.writeInfo("Deleting " + config.getOutputDirectory());
+			Filesystem.deleteDirRecursive(
+					config.getOutputDirectory().toString(), null);
 
 			// copy original base to output
-			logger.writeInfo("Duplicating original project: " + origDir + " -> "
-					+ outputDir);
-			Filesystem.copyDirRecursive(origDir.toString(), sOutputDir, null);
+			logger.writeInfo("Duplicating original project: "
+					+ config.getOriginalDirectory() + " -> "
+					+ config.getOutputDirectory());
+			Filesystem.copyDirRecursive(
+					config.getOriginalDirectory().toString(),
+					config.getOutputDirectory().toString(), null);
 
 			// re-integration -> overwriting of files from orig which are
 			// affected by split/merge
 			long start = Time.getCurrentNanoSecs();
 			try {
 				Finder.FindParameter fparam = new Finder.FindParameter(
-						inputDir.toString(), TYPE.FILE, 0,
-						Configuration.FIND_PATTERN,
+						config.getInputDirectory().toString(), TYPE.FILE, 0,
+						config.getFilePattern(),
 						Configuration.FIND_PATTERN_STRATEGY, false, false,
 						merger);
 				logger.writeInfo(fparam.toString());
 				logger.writeInfo("Processed files: " + Finder.find(fparam));
-			} catch (java.nio.file.AccessDeniedException perm_e) {
-				logger.writeFail("Error accessing " + perm_e.getMessage());
-				Configuration.purgeOutputDir(logger, outputDir.toString());
+			} catch (IOException e) {
+				logger.writeFail(String.format("Could not access %s", e.getMessage()));				
+				Configuration.purgeOutputDir(logger, config.getOutputDirectory().toString());
 				logger.closeAllStreams();
-				return;
-			} catch (Merger.MergerException me) {
-				logger.writeFail(me.getMessage());
-				Configuration.purgeOutputDir(logger, outputDir.toString());
-				logger.closeAllStreams();
-				return;
+				return null;
 			}
 
 			logger.writeInfo(String.format("Duration: %.3f secs",
@@ -235,7 +202,7 @@ public class Main {
 			System.err.println(e);
 			e.printStackTrace();
 		}
-
+		return null;
 	}
 
 	/**
@@ -245,50 +212,83 @@ public class Main {
 	 *            argument vector
 	 */
 	public static void main(String[] args) {
-		// preset default to resolved '.'
-		Path inputDir = Paths.get(".").toAbsolutePath().normalize();
-		if (args.length < 1) {
-			usage();
-			return;
+		HashSet<Configuration.UserConf> configs = null;
+
+		try {
+			configs = parseArgs(args);
+		} catch (Exception e) {
+			System.err
+					.println(String.format("Fatal Error [%s]", e.getMessage()));
+			//e.printStackTrace();
+			System.exit(1);
 		}
-		if (args.length > 0) {
-			// input directory set?
-			if (args.length >= 2) {
-				inputDir = Paths.get(args[1]).toAbsolutePath().normalize();
-			}
-			switch (args[0]) {
-			case "--areport": // report only, with analysis (expensive)
-			case "--report": // xml report only without analysis (very cheap)
-				Configuration.REPORT_ONLY = true;
-			case "--asplit": // split with analysis (very expensive)
-				if (!"--report".equals(args[0])) { // ugly
-					Configuration.SKIP_ANALYSIS = false;
+		if (configs != null) {
+			// for every user conf, do respective processing
+			configs.stream().sorted().forEach((userConf) -> {
+				if (!userConf.isOverriden()) {
+					// default action is split
+					Function<UserConf, Void> modeFunction = Main::split;
+					Configuration.Mode mode = userConf.getMode();
+					switch (mode) {
+					case merge: {
+						modeFunction = Main::merge;
+						break;
+					}
+					case areport: {
+						Configuration.REPORT_ONLY = true;
+						Configuration.SKIP_ANALYSIS = false;
+						break;
+					}
+					case report:
+						Configuration.REPORT_ONLY = true;
+						Configuration.SKIP_ANALYSIS = true;
+						break;
+					case asplit: {
+						Configuration.REPORT_ONLY = false;
+						Configuration.SKIP_ANALYSIS = false;
+						break;
+					}
+					case split:						
+						Configuration.REPORT_ONLY = false;
+						Configuration.SKIP_ANALYSIS = true;
+						break;
+					}
+					modeFunction.apply(userConf);
 				}
-			case "--split": { // split without analysis (cheap)
-				// default is all feature expressions
-				Pattern searchPattern = Pattern.compile(".*");
-				// was search pattern submitted and differs from default
-				// -> since eclipse shell expands ".*" as argument to cwd
-				// resulting in a list of entries (.e.g., .classpath,
-				// .settings,...) -> strange
-				if (args.length >= 3
-						&& !searchPattern.toString().equals(args[2])) {
-					searchPattern = Pattern.compile(args[2]);
-				}
-				split(inputDir, searchPattern);
-				break;
-			}
-			case "--merge":
-				merge(inputDir);
-				break;
-			case "--help":
-				usage();
-				return;
-			default:
-				System.out.println("Unknown option: " + args[0]);
-				usage();
-				return;
-			}
+			});
 		}
+	}
+
+	private static HashSet<UserConf> parseArgs(String[] args) throws Exception {
+		HashSet<Configuration.UserConf> configs = null;
+		UserConf defaultConfig = Configuration.getDefault();
+		// use built-in default config
+		if (args.length == 0) {
+			configs = new HashSet<>();
+			configs.add(defaultConfig);
+		}
+		// config submitted by user OR --help
+		else if (args.length == 1) {
+			// --conf="/path/to/file.conf"
+			String[] setting = args[0].split("=");
+			// --help
+			if (setting.length == 1 && setting[0].equals("--help")) {
+				usage(defaultConfig);
+			}
+			// config submitted by user
+			else if (setting.length == 2 && setting[0].equals("--config")) {
+
+				ConfigParserDriver cpd = new ConfigParserDriver(setting[1],
+						defaultConfig);
+				// TODO disable debug for conf parser
+				configs = cpd.run(true);
+
+			} else {
+				throw new Exception(String.format("Invalid argument passed (%s)", args[0]));
+			}
+		} else {
+			throw new Exception(String.format("Invalid number of arguments passed (%d)", args.length));
+		}
+		return configs;
 	}
 }

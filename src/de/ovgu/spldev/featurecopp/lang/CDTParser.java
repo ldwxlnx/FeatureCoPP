@@ -22,6 +22,8 @@ import org.eclipse.cdt.core.parser.IScannerInfo;
 import org.eclipse.cdt.core.parser.IncludeFileContentProvider;
 import org.eclipse.cdt.core.parser.ScannerInfo;
 
+import de.ovgu.spldev.featurecopp.log.Logger;
+
 public abstract class CDTParser {
 	/**
 	 * Creates a CDTParser for a given source code string.
@@ -51,17 +53,16 @@ public abstract class CDTParser {
 	/**
 	 * Displays translation unit on given stream.
 	 * 
-	 * @param strm
-	 *            print stream where translation unit is written
+	 * @param logger where translation unit is written
 	 * @throws Exception
 	 */
-	public void display(PrintStream strm) throws Exception {
-		traverse(new Writer(strm));
+	public void display(Logger logger) throws Exception {
+		traverse(new Writer(logger));
 	}
 
-	public void display(PrintStream strm, int beginLine, int endLine)
+	public void display(Logger logger, int beginLine, int endLine)
 			throws Exception {
-		traverse(new Writer(strm, beginLine, endLine));
+		traverse(new Writer(logger, beginLine, endLine));
 	}
 
 	public static enum StatEntity {
@@ -314,14 +315,14 @@ public abstract class CDTParser {
 	 * 
 	 */
 	protected class Writer implements Visitor {
-		public Writer(PrintStream strm, int beginLine, int endLine) {
+		public Writer(Logger logger, int beginLine, int endLine) {
 			this.beginLine = beginLine;
 			this.endLine = endLine;
-			this.strm = strm;
+			this.logger = logger;
 		}
 
-		public Writer(PrintStream strm) {
-			this.strm = strm;
+		public Writer(Logger logger) {
+			this.logger = logger;
 		}
 
 		@Override
@@ -336,17 +337,17 @@ public abstract class CDTParser {
 				if (fileLocation != null
 						&& beginLine < fileLocation.getStartingLineNumber()
 						&& fileLocation.getEndingLineNumber() < endLine) {
-					strm.println(curr);
+					logger.writeDebug(curr.toString());
 				}
 			}
 			// no special source excerpt requested!
 			else {
-				strm.println(curr);
+				logger.writeDebug(curr.toString());
 			}
 
 		}
 
-		private PrintStream strm;
+		private Logger logger;
 		private int beginLine;
 		private int endLine;
 	}
@@ -389,8 +390,7 @@ public abstract class CDTParser {
 				// e.printStackTrace();
 			} catch (UnsupportedOperationException e) {
 				fileOccurrence = "UnsupportedOperationException";
-			}
-
+			}			
 			return String.format("%" + level + "s%s(%s)-> %s", " ", node
 					.getClass().getSimpleName(), fileOccurrence, node
 					.getRawSignature().replaceAll("(\t|\n)", ""));

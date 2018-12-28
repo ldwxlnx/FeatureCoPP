@@ -11,10 +11,14 @@ public class Logger {
 	public Logger() {
 		this.fail_strm = new HashSet<>();
 		this.info_strm = new HashSet<>();
+		this.debug_strm = new HashSet<>();
 	}
 	@Override
 	public String toString() {
 		return String.format("info=%s;fail=%s", info_strm, fail_strm);
+	}
+	public void useDebug() {
+		this.useDebug = true;
 	}
 	/**
 	 * Rotates present log files (if any) and creates a new log file number with 0.
@@ -27,7 +31,7 @@ public class Logger {
 	public Logger addRotatedLogFileToAllStreams(String logFormat, int rotate_n) throws FileNotFoundException {
 		rotate(logFormat, rotate_n);
 		PrintStream logFile = new PrintStream(String.format(logFormat, 0));
-		return addInfoStream(logFile).addFailStream(logFile);
+		return addInfoStream(logFile).addFailStream(logFile).addDebugStream(logFile);
 	}
 	public Logger addInfoStream(PrintStream strm) {
 		info_strm.add(strm);
@@ -37,10 +41,15 @@ public class Logger {
 		fail_strm.add(strm);
 		return this;
 	}
+	public Logger addDebugStream(PrintStream strm) {
+		debug_strm.add(strm);
+		return this;
+	}
 	
 	public void flushAllStrms() {
 		flushInfoStrms();
 		flushFailStrms();
+		flushDebugStrms();
 	}
 	public void flushFailStrms() {
 		for (PrintStream strm : fail_strm) {
@@ -52,16 +61,25 @@ public class Logger {
 			strm.flush();
 		}		
 	}
+	public void flushDebugStrms() {
+		for (PrintStream strm : debug_strm) {
+			strm.flush();
+		}		
+	}
 	
 	public void closeAllStreams() {
 		closeInfoStreams();
 		closeFailStreams();
+		closeDebugStreams();
 	}
 	public void closeInfoStreams() {
 		closeIn(info_strm);
 	}
 	public void closeFailStreams() {
 		closeIn(fail_strm);
+	}
+	public void closeDebugStreams() {
+		closeIn(debug_strm);
 	}
 	private void closeIn(HashSet<PrintStream> strms) {
 		for (PrintStream strm : strms) {
@@ -85,6 +103,14 @@ public class Logger {
 			String timeStamp = Time.logDate();
 			for (PrintStream strm : fail_strm) {
 				write(strm, timeStamp, String.format("[FAIL] %s", msg));
+			}
+		}
+	}
+	public void writeDebug(final String msg) {
+		if (fail_strm != null && useDebug) {
+			String timeStamp = Time.logDate();
+			for (PrintStream strm : debug_strm) {
+				write(strm, timeStamp, String.format("[DEBG] %s", msg));
 			}
 		}
 	}
@@ -113,5 +139,7 @@ public class Logger {
 		}
 	}
 	private HashSet<PrintStream> info_strm;
+	private HashSet<PrintStream> debug_strm;
 	private HashSet<PrintStream> fail_strm;
+	private boolean useDebug;
 }

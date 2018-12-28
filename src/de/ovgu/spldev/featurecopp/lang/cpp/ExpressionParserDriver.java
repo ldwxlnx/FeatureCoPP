@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.regex.Pattern;
 
 import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser.ObjMacroHistogram;
+import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTree;
 
 /**
@@ -16,8 +17,8 @@ public final class ExpressionParserDriver {
 		lexer = new ExpressionLexer();
 		parser = new ExpressionParser(lexer);			
 	}
-	public FeatureTree run(boolean showLexerOutput, final String cpp_directive, final Pattern requestPattern) throws Exception {
-		lexer.debug(showLexerOutput);
+	public FeatureTree run(Logger logger, final String cpp_directive, final Pattern requestPattern) throws Exception {
+		lexer.setLogger(logger);
 		if(currReader != null) {
 			currReader.close();
 		}

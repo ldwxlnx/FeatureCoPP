@@ -24,8 +24,5 @@ hs_err_pid*
 /bin/
 
 # test output
-/test_dos_merged/
-/test_dos_split/
-/test_unix_merged/
-/test_unix_split/
-/test_tmp_split/
+/test*merged/
+/test*split/

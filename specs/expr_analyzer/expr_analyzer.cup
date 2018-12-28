@@ -46,6 +46,9 @@ parser code {:
 		public ObjMacroHistogram() {
 			objMacroHistogram = new HashMap<String, Integer>();
 		}
+		public void clear() {
+			objMacroHistogram.clear();
+		}
 		public String toString() {
 			return sortDesc().toString();
 		}

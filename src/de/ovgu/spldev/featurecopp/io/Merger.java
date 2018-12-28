@@ -77,7 +77,7 @@ public class Merger implements Processable {
 	}
 	// only for base files
 	private void includeOccurrences(final Path fso, StringBuilder filebuffer) throws Exception {		
-		NLPreservBufferedReader reader = new NLPreservBufferedReader(new FileReader(fso.toFile()), Configuration.MERGE_READER_BUFFER);
+		NLPreservBufferedReader reader = new NLPreservBufferedReader(new FileReader(fso.toFile()), Configuration.IO_MERGE_READER_BUFFER);
 		String currLine = "";
 		int line = 0;
 		while((currLine = reader.readLine()) != null) {	
@@ -103,7 +103,7 @@ public class Merger implements Processable {
 	// only for module files
 	private void readOccurrence(long occ_id, final Path fso, StringBuilder filebuffer) throws Exception {
 		//logger.writeInfo("Searching " + fso + " for occ: " + occ_id);
-		NLPreservBufferedReader reader = new NLPreservBufferedReader(new FileReader(fso.toFile()), Configuration.MERGE_READER_BUFFER);
+		NLPreservBufferedReader reader = new NLPreservBufferedReader(new FileReader(fso.toFile()), Configuration.IO_MERGE_READER_BUFFER);
 		String currLine = "";
 		int line = 0;
 		boolean found = false;

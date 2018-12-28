@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 import de.ovgu.spldev.featurecopp.config.Configuration;
+import de.ovgu.spldev.featurecopp.config.Configuration.UserConf;
 import de.ovgu.spldev.featurecopp.filesystem.Filesystem;
 import de.ovgu.spldev.featurecopp.filesystem.Finder;
 import de.ovgu.spldev.featurecopp.filesystem.Finder.Processable;
@@ -38,14 +39,13 @@ public final class CPPAnalyzer implements Processable {
 		// needed for output file placement
 		// this.currentFile = fso;
 
-		String blacklistedFile = Configuration.isBlacklisted(fso);		
-		if(blacklistedFile != null) {
+		if(userConf.isBlackListed(fso)) {
 			logger.writeFail("Refused processing " + fso + " due to existing blacklist entry!");
 			return;
 		}
 		logger.writeInfo("Processing " + fso);
 		try {
-			scan(showLexerOutput, fso);
+			scan(fso);
 		} catch (Exception e) {
 			// smth regarding input file went wrong
 			logger.writeFail(e.getMessage());
@@ -77,20 +77,18 @@ public final class CPPAnalyzer implements Processable {
 		private String value;
 	}
 
-	public CPPAnalyzer(boolean showExprLexTokens, Logger logger, final Path inputDir,
-			final Path outputDir, final Path moduleDir,
-			final Pattern requestExprPattern) {
+	public CPPAnalyzer(Logger logger, UserConf userConf) {
 		this.logger = logger;
-		this.inputDir = inputDir;
-		this.outputDir = outputDir;
-		this.featureScopeManager = new FeatureScopeManager(moduleDir, logger, requestExprPattern);
+		this.userConf = userConf;
+		this.inputDir = userConf.getInputDirectory();
+		this.outputDir = userConf.getOutputDirectory();
+		this.featureScopeManager = new FeatureScopeManager(userConf.getModuleDirectory(), logger, userConf.getMacroPattern());
 		this.cppScanner = new CPPScanner();
 		this.cppScanner.debug(false);
-		this.requestExprPattern = requestExprPattern;
-		this.showLexerOutput = showExprLexTokens;
+		this.requestExprPattern = userConf.getMacroPattern();
 	}
 
-	public void scan(boolean showLexerOutput, final Path currentFile)
+	public void scan(final Path currentFile)
 			throws Exception {
 		cppScanner.setReader(currentReader = new InputStreamReader(new FileInputStream(currentFile.toString()), "UTF-8"));
 //		cppScanner.setReader(currentReader = new FileReader(currentFile
@@ -142,7 +140,7 @@ public final class CPPAnalyzer implements Processable {
 								.toString());
 					}
 					// maintain a new scope
-					featureScopeManager.addIfElif(showLexerOutput, requestExprPattern,
+					featureScopeManager.addIfElif(requestExprPattern,
 							condExpr, sym.line, sym.type);
 					break;
 				}
@@ -250,6 +248,9 @@ public final class CPPAnalyzer implements Processable {
 			logger.writeInfo(String.format(
 					"Processed text size (UTF-8): %d bytes (%03.3fMiB)",
 					textSize, textSize * 1.0 / (1024 * 1024)));
+			// clear static tables in Parser for further invocations
+			objMacroHistogram.clear();
+			objMacroHistogramInclElse.clear();
 		}
 	}
 	
@@ -334,6 +335,5 @@ public final class CPPAnalyzer implements Processable {
 	private Path outputDir;
 	/** a regular expression describing feature expression to get honored */
 	private Pattern requestExprPattern;
-	/** controls whether ExpressionLexer should display tokenization*/
-	private boolean showLexerOutput;
+	private Configuration.UserConf userConf;
 }

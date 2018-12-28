@@ -1,7 +1,7 @@
 /************************************
  we strictly follow the c11-standard
  see:
- n1570.pdf ง6.4.2.1
+ n1570.pdf ยง6.4.2.1
  and extend by following implementation specific:
  - VMS-system-identifiers: identifier incl. $
 ************************************/

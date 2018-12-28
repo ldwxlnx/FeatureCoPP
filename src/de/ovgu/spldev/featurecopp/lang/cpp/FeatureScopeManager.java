@@ -1,6 +1,5 @@
 package de.ovgu.spldev.featurecopp.lang.cpp;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -8,7 +7,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Stack;
 import java.util.regex.Pattern;
-import java.util.Map.Entry;
 
 import de.ovgu.spldev.featurecopp.config.Configuration;
 import de.ovgu.spldev.featurecopp.lang.CDTParser;
@@ -24,12 +22,10 @@ import de.ovgu.spldev.featurecopp.splmodel.FeatureTable;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTree;
 
 public class FeatureScopeManager {
-	public static void initASTStrm(final String astLogfile)
-			throws FileNotFoundException {
-		ast_strm = new PrintStream(astLogfile);
-	}
 
-	public FeatureScopeManager(final Path moduleDir, Logger logger, Pattern requestPattern) {
+	public FeatureScopeManager(final Path moduleDir, Logger logger,
+			Pattern requestPattern) {
+		FeatureModule.setLogger(logger);
 		this.exprParseDrv = new ExpressionParserDriver();
 		this.moduleDir = moduleDir;
 		this.featureScope = new Stack<Stack<Node>>();
@@ -41,8 +37,8 @@ public class FeatureScopeManager {
 		featureScope.push(new Stack<FeatureScopeManager.Node>());
 		// prevTopMost -> provide access to previous top most -> directives are
 		// written there themselves
-		Node node = prevTopMost = basefileBucket = new Node(new FeatureModule(
-				currentSourceFile), null, null, TYPE.UNDEF);
+		Node node = prevTopMost = basefileBucket = new Node(
+				new FeatureModule(currentSourceFile), null, null, TYPE.UNDEF);
 		featureScope.peek().push(node);
 	}
 
@@ -51,14 +47,14 @@ public class FeatureScopeManager {
 		// conditional in process
 		return featureScope.size() > 1;
 	}
-	
+
 	public void dumpStack(PrintStream strm) {
 		int level = 0;
 		Enumeration<Stack<Node>> eSiblingGroups = featureScope.elements();
 		while (eSiblingGroups.hasMoreElements()) {
 			Enumeration<Node> eNodes = eSiblingGroups.nextElement().elements();
 			strm.print(String.format("%6d\t", level++));
-			while(eNodes.hasMoreElements()) {
+			while (eNodes.hasMoreElements()) {
 				Node curr = eNodes.nextElement();
 				strm.print("[" + curr + "]");
 			}
@@ -89,15 +85,16 @@ public class FeatureScopeManager {
 		this.currentOriginalSourceFile = currentOriginalSourceFile;
 	}
 
-	public void addIfElif(boolean showLexerOutput, final Pattern requestPattern,
-			final String conditionalExpr, int lineNumber,CPPAnalyzer.TYPE type) throws Exception {
+	public void addIfElif(final Pattern requestPattern,
+			final String conditionalExpr, int lineNumber, CPPAnalyzer.TYPE type)
+			throws Exception {
 		FeatureTree featureTree = null;
 		try {
-			featureTree = parseConditionalExpression(showLexerOutput, conditionalExpr);
+			featureTree = parseConditionalExpression(conditionalExpr);
 		} catch (Exception e) {
 			// rethrow
-			throw new Exception(e.getMessage() + " for expression: "
-					+ conditionalExpr);
+			throw new Exception(
+					e.getMessage() + " for expression: " + conditionalExpr);
 		}
 
 		// TODO remove
@@ -123,10 +120,11 @@ public class FeatureScopeManager {
 			// SIBLING ON TOP (either if* or elif)
 			Node sibling = featureScope.peek().peek();
 			// ...or dangling ?
-			if(! sibling.isIf() && ! sibling.isElif()) {
-				throw new Exception("#elif dangling! Previous sibling is " + sibling.type + "!");
+			if (!sibling.isIf() && !sibling.isElif()) {
+				throw new Exception("#elif dangling! Previous sibling is "
+						+ sibling.type + "!");
 			}
-			
+
 			// this directive marks ending of previous sibling directive
 			sibling.setOccurrenceEndline(lineNumber);
 			// sibling conditional ended -> write closing mark-up of extracted
@@ -146,8 +144,9 @@ public class FeatureScopeManager {
 		// SIBLING ON TOP
 		Node sibling = featureScope.peek().peek();
 		// ...or dangling ?
-		if(! sibling.isIf() && ! sibling.isElif()) {			
-			throw new Exception("#else dangling! Previous sibling is " + sibling.type + "!");
+		if (!sibling.isIf() && !sibling.isElif()) {
+			throw new Exception("#else dangling! Previous sibling is "
+					+ sibling.type + "!");
 		}
 		// this directive marks ending of previous sibling directive
 		sibling.setOccurrenceEndline(lineNumber);
@@ -165,7 +164,8 @@ public class FeatureScopeManager {
 
 		// parent interconnection is propagated forward by each sibling
 		// (initially by if*)
-		addScope(requestPattern, featureTree, sibling.parent, lineNumber, CPPAnalyzer.TYPE.ELSE);
+		addScope(requestPattern, featureTree, sibling.parent, lineNumber,
+				CPPAnalyzer.TYPE.ELSE);
 	}
 
 	public void handleEndif(int lineNumber) throws Exception {
@@ -175,7 +175,7 @@ public class FeatureScopeManager {
 			cacheInMostRecent(FeatureModule.getCloseMarkup());
 		}
 		// remove top-most (stacked) conditional group
-		Stack<Node> conditional = featureScope.pop();		
+		Stack<Node> conditional = featureScope.pop();
 		// set end position of top-left-most feature
 		conditional.peek().setOccurrenceEndline(lineNumber);
 		// write back all controlled code caches
@@ -231,38 +231,43 @@ public class FeatureScopeManager {
 		basefileBucket.hasDirective = true;
 	}
 
-	private void addScope(final Pattern requestPattern,
-			FeatureTree featureTree, Node parent, int lineNumber, CPPAnalyzer.TYPE type)
+	private void addScope(final Pattern requestPattern, FeatureTree featureTree,
+			Node parent, int lineNumber, CPPAnalyzer.TYPE type)
 			throws IOException {
 		// perform feature look-up: already present otherwise created
 		FeatureModule featureModule = FeatureTable.get(featureTree, moduleDir);
 		// register feature occurrence within corresponding feature module
 		// (report-only)
-//		FeatureModule.FeatureOccurrence currfeatureOccurrence = featureModule
-//				.addOccurrence(currentSourceFile.toString(),
-//						parent.getFeatureOccurrence(), lineNumber, featureTree);
+		// FeatureModule.FeatureOccurrence currfeatureOccurrence = featureModule
+		// .addOccurrence(currentSourceFile.toString(),
+		// parent.getFeatureOccurrence(), lineNumber, featureTree);
 		FeatureModule.FeatureOccurrence currfeatureOccurrence = featureModule
 				.addOccurrence(currentOriginalSourceFile.toString(),
-						parent.getFeatureOccurrence(), lineNumber, featureTree, featureScope.size() - 1); // basefile is always on bottom, hence minus 1		
-		// should conditional expression not be filtered by user request?	
-		if(!featureTree.containsObjMacro(requestPattern)) {
-		//if (!requestPattern.matcher(featureTree.toString()).matches()) {
-		//if (!requestPattern.matcher(featureTree.featureExprToString()).matches()) {			
+						parent.getFeatureOccurrence(), lineNumber, featureTree,
+						featureScope.size() - 1); // basefile is always on
+													// bottom, hence minus 1
+		// should conditional expression not be filtered by user request?
+		if (!featureTree.containsObjMacro(requestPattern)) {
+			// if (!requestPattern.matcher(featureTree.toString()).matches()) {
+			// if
+			// (!requestPattern.matcher(featureTree.featureExprToString()).matches())
+			// {
 			featureModule.unsetRequested();
 		}
 		// feature extraction requested!
 		else {
-			logger.writeInfo("Expression [" + featureTree.featureExprToString() + "] matched by " + requestPattern + " in line " + lineNumber);
+			logger.writeDebug("Expression [" + featureTree.featureExprToString()
+					+ "] matched by " + requestPattern + " in line "
+					+ lineNumber);
 			// indicate to perform a write back for collected base file code
 			// (requested conditional expr)
-			//basefileHasDirective();
+			// basefileHasDirective();
 			// insert module markup line to cache (file) where controlled code
 			// gets extracted
 			// <$inline...
-			prevTopMost.appendToControlledCodeCache(featureModule
-					.getOpenMarkup(false,
-							parent.getMostRecentRequestedFeatureFile(),
-							featureTree.toString(), currfeatureOccurrence));
+			prevTopMost.appendToControlledCodeCache(featureModule.getOpenMarkup(
+					false, parent.getMostRecentRequestedFeatureFile(),
+					featureTree.toString(), currfeatureOccurrence));
 		}
 		// recognized conditional is now "top-left"-most
 		featureScope.peek().push(
@@ -276,7 +281,7 @@ public class FeatureScopeManager {
 			cacheInMostRecent(featureModule.getOpenMarkup(true,
 					parent.getMostRecentRequestedFeatureFile(),
 					featureTree.toString(), currfeatureOccurrence));
-		}			
+		}
 	}
 
 	/**
@@ -286,7 +291,8 @@ public class FeatureScopeManager {
 	 */
 	private class Node {
 		private Node(FeatureModule feature, Node parent,
-				FeatureModule.FeatureOccurrence featureOccurrence, CPPAnalyzer.TYPE type) {
+				FeatureModule.FeatureOccurrence featureOccurrence,
+				CPPAnalyzer.TYPE type) {
 			this.feature = feature;
 			this.controlledCodeCache = new StringBuilder();
 			this.parent = parent;
@@ -301,7 +307,8 @@ public class FeatureScopeManager {
 		}
 
 		private Path getMostRecentRequestedFeatureFile() {
-			return findMostRecentRequestedParent().feature.featureModuleFileToPath();
+			return findMostRecentRequestedParent().feature
+					.featureModuleFileToPath();
 		}
 
 		private void setOccurrenceEndline(int lineNumber) {
@@ -325,7 +332,7 @@ public class FeatureScopeManager {
 		public String toString() {
 			return feature.featureTreeToString();
 		}
-		
+
 		public boolean isIf() {
 			switch (type) {
 			case IF:
@@ -336,7 +343,7 @@ public class FeatureScopeManager {
 				return false;
 			}
 		}
-		
+
 		public boolean isElif() {
 			return type == CPPAnalyzer.TYPE.ELIF;
 		}
@@ -344,12 +351,13 @@ public class FeatureScopeManager {
 		private void solveParseAndWriteBack() throws IOException {
 			String sourceCode = controlledCodeCache.toString();
 			// not base file?
-			if (! Configuration.SKIP_ANALYSIS && featureOccurrence != null) {
+			if (!Configuration.SKIP_ANALYSIS && featureOccurrence != null) {
 				try {
 					HashMap<String, String> macroDefs = featureOccurrence
 							.solveCSP();
-					//TODO remove
-					//logger.writeInfo(feature.featureTreeToString() + "=>" + macroDefs);
+					// TODO remove
+					// logger.writeInfo(feature.featureTreeToString() + "=>" +
+					// macroDefs);
 					// solveCSP has set dead (or "valid")
 					if (!featureOccurrence.isDeadFeature()) {
 						// analyze controlled code syntactically and
@@ -365,36 +373,44 @@ public class FeatureScopeManager {
 						featureOccurrence.setStats(stats = cParser.analyze(
 								featureOccurrence.getBeginLine(),
 								featureOccurrence.getEndLine()));
-						if (ast_strm != null) {
-							ast_strm.println("FILE="
+						if (logger != null) {
+							logger.writeDebug("FILE="
 									+ currentOriginalSourceFile + " lines ("
 									+ featureOccurrence.getBeginLine() + ","
 									+ featureOccurrence.getEndLine() + ")");
-							ast_strm.println("DIRECTIVE=" + featureOccurrence);
-							ast_strm.println("SYMBOLMAP=" + stats.symbolsMapToString());
-							ast_strm.println("BINDINGMAP=" + stats.bindingMapToString());
-							// symbol /binding map not longer needed -prevent from memory shortage
+							logger.writeDebug("DIRECTIVE=" + featureOccurrence);
+							logger.writeDebug(
+									"SYMBOLMAP=" + stats.symbolsMapToString());
+							logger.writeDebug(
+									"BINDINGMAP=" + stats.bindingMapToString());
+							// symbol /binding map not longer needed -prevent
+							// from memory shortage
 							stats.unsetMaps();
-							ast_strm.println("ASTPART=");
-							cParser.display(ast_strm,
+
+							cParser.display(logger,
 									featureOccurrence.getBeginLine(),
 									featureOccurrence.getEndLine());
 						}
-					}
-					else {
-						logger.writeFail("Expression " + feature.featureTreeToString() + " not evaluated due to elapsed time limit (" 
-								+ Configuration.CSP_TIMELIMIT + ") or unsatisfiability");
+					} else {
+						logger.writeFail(String.format(
+								"Line %d: Expr=[%s] not evaluated due to elapsed time limit (%s) or unsatisfiability",
+								featureOccurrence.getBeginLine(),
+								feature.featureTreeToString(),
+								Configuration.CSP_TIMELIMIT));
 					}
 					// problems during analysis are not fatal
 				} catch (Exception e) {
-					if(logger != null) {
+					if (logger != null) {
 						featureOccurrence.setDead();
-						logger.writeFail(e.getMessage());
+						logger.writeFail(String.format("Line %d: Expr=[%s] %s",								
+								featureOccurrence.getBeginLine(),
+								feature.featureTreeToString(),
+								e.getMessage()));
 					}
 				}
 			}
 			// write role to feature module
-			if(! Configuration.REPORT_ONLY) {
+			if (!Configuration.REPORT_ONLY) {
 				feature.writeToFeatureFile(sourceCode);
 			}
 		}
@@ -419,9 +435,10 @@ public class FeatureScopeManager {
 		 */
 		private boolean hasDirective;
 		/**
-		 * Is this node an if* directive -- needed as sanity check for dangling #elif/else-clauses
+		 * Is this node an if* directive -- needed as sanity check for dangling
+		 * #elif/else-clauses
 		 */
-		CPPAnalyzer.TYPE type; 
+		CPPAnalyzer.TYPE type;
 	}
 
 	/**
@@ -449,12 +466,12 @@ public class FeatureScopeManager {
 		ExpressionParser.ObjMacroHistogram tdMap = new ObjMacroHistogram();
 		// only single if*?
 		if (getCurrentNumOfBranches() == 1) {
-			FeatureOccurrence sibling = featureScope.peek().peek().featureOccurrence;
+			FeatureOccurrence sibling = featureScope.peek()
+					.peek().featureOccurrence;
 			tdMap.merge(sibling.getTDMap());
 
 			// cloning just for presentation reasons (adding parentheses)
-			FeatureTree.Node right = sibling
-					.getClonedFTreeRoot();
+			FeatureTree.Node right = sibling.getClonedFTreeRoot();
 			// is sibling root a logical negation?
 			if (right.isLogicalNegation()) {
 				// use right child as root instead of prefixing with negation
@@ -482,11 +499,11 @@ public class FeatureScopeManager {
 			Stack<FeatureTree.Node> rootNodes = new Stack<FeatureTree.Node>();
 			Enumeration<Node> eFeatures = featureScope.peek().elements();
 			while (eFeatures.hasMoreElements()) {
-				FeatureOccurrence currSibling = eFeatures.nextElement().featureOccurrence;
+				FeatureOccurrence currSibling = eFeatures
+						.nextElement().featureOccurrence;
 				// cloning just for presentational reasons (adding
 				// parentheses)
-				rootNodes.push(currSibling
-						.getClonedFTreeRoot());
+				rootNodes.push(currSibling.getClonedFTreeRoot());
 				// else tree has td as sum of all sibling tds
 				tdMap.merge(currSibling.getTDMap());
 			}
@@ -542,27 +559,26 @@ public class FeatureScopeManager {
 		}
 		ftree.setKeyword("#else");
 		ftree.setTDMap(tdMap);
-		
+
 		exprParseDrv.insertAndAccumulateValues(tdMap);
-		
+
 		return ftree;
 	}
 
 	/**
 	 * Delegates conditional expression to ExpressionParserDriver.
-	 * @param showLexerOutput display Lexer tokenization (for debugging purposes)
+	 * 
 	 * @param conditionalExpr
 	 *            expression to parse
 	 * @return abstract syntax tree of dissected conditional expression
 	 * @throws Exception
 	 *             Exception in case of lexical or syntactic errors
 	 */
-	private FeatureTree parseConditionalExpression(boolean showLexerOutput, final String conditionalExpr)
+	private FeatureTree parseConditionalExpression(final String conditionalExpr)
 			throws Exception {
-		return exprParseDrv.run(showLexerOutput, conditionalExpr, requestPattern);
+		return exprParseDrv.run(logger, conditionalExpr, requestPattern);
 	}
 
-	private static PrintStream ast_strm;
 	/** driver of generated conditional parser (1 per run) */
 	private ExpressionParserDriver exprParseDrv;
 	/**
@@ -571,9 +587,9 @@ public class FeatureScopeManager {
 	 */
 	private Path moduleDir;
 	/**
-	 * name of current original source file (source)
-	 * -> needed for syntax/semantic analysis
-	 * -> also used in xml journal, indicating original location
+	 * name of current original source file (source) -> needed for
+	 * syntax/semantic analysis -> also used in xml journal, indicating original
+	 * location
 	 */
 	private Path currentOriginalSourceFile;
 	private Node prevTopMost;

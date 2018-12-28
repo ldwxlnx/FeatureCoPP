@@ -14,10 +14,12 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import de.ovgu.spldev.featurecopp.config.Configuration.ConfigurationException;
 import de.ovgu.spldev.featurecopp.log.Logger;
 
 /**
@@ -30,6 +32,17 @@ import de.ovgu.spldev.featurecopp.log.Logger;
  * @since 1.7
  */
 public class Filesystem {
+	public static final String DIR_SEPARATOR = File.separator;
+	public static class FilesystemException extends Exception {
+
+		/**
+		 * gen uuid
+		 */
+		private static final long serialVersionUID = -916569815939468799L;
+		public FilesystemException(String msg) {
+			super(msg);
+		}
+	}
 	/**
 	 * Provides a basic implementation of a derived SimpleFileVisitor. This is
 	 * used within Files.walkFileTree. An instance of Loggable is stored here
@@ -200,7 +213,7 @@ public class Filesystem {
 			return FileVisitResult.CONTINUE;
 		}
 
-		/**
+		/**FilesystemException
 		 * Deletes a given empty directory object from the filesystem. If
 		 * Loggable is null, this method does not output anything at all.
 		 * 
@@ -278,8 +291,8 @@ public class Filesystem {
 	 * @see FileSystems.getDefault().getPath
 	 * @since 1.7
 	 */
-	public static Path genPath(final String name, String... portions) {
-		return FileSystems.getDefault().getPath(name, portions);
+	public static Path genPath(final String name, String... portions) {		
+		return FileSystems.getDefault().getPath(name, portions).toAbsolutePath().normalize();
 	}
 
 	/**
@@ -389,5 +402,36 @@ public class Filesystem {
 	}
 	public static String getSuffix(final Path filename) {
 		return getSuffix(filename.toString());
+	}
+	public static boolean isDirectory(Path dirname) {
+		return Files.isDirectory(dirname, LinkOption.NOFOLLOW_LINKS);
+	}
+	public static boolean isExecutable(Path pathname) {
+		return Files.isExecutable(pathname);
+	}
+	public static boolean isWritable(Path pathname) {
+		return Files.isWritable(pathname);
+	}
+	public static Path isAccessibleDirectory(final Path dirname) throws FilesystemException {
+		if(! isDirectory(dirname)) {
+			throw new FilesystemException(String.format("%s is not a directory!", dirname));
+		}
+		if(! isExecutable(dirname)) {
+			throw new FilesystemException(String.format("%s is not accessible!", dirname));
+		}
+		return dirname;
+	}
+	public static Path isWritableDirectory(final Path dirname) throws FilesystemException {
+		isAccessibleDirectory(dirname);
+		if(! isWritable(dirname)) {
+			throw new FilesystemException(String.format("%s is not writable!", dirname));
+		}
+		return dirname;
+	}
+	public static Path isAccessibleDirectory(final String dirname) throws FilesystemException {
+		return isAccessibleDirectory(Paths.get(dirname).toAbsolutePath().normalize());
+	}
+	public static Path isWritableDirectory(final String dirname) throws FilesystemException {
+		return isWritableDirectory(Paths.get(dirname).toAbsolutePath().normalize());
 	}
 }

@@ -1,0 +1,301 @@
+/* ----------------------Preliminary Declarations Section--------------------*/
+   
+/* Import the class java_cup.runtime.*  */
+import java_cup.runtime.*;
+import de.ovgu.spldev.featurecopp.config.Configuration.UserConf;
+import java.util.HashSet;
+import java.util.Deque;
+import java.util.ArrayDeque;
+
+init with {:
+	config = new HashSet<>();
+	deque = new ArrayDeque<UserConf>();
+:};
+
+action code {:	
+	// init first
+:};
+
+scan with {:
+	// just to obtain the line/column-occurences
+	Symbol currRead = getScanner().next_token();
+	line = currRead.left + 1;
+	column = currRead.right + 1;
+	return currRead;
+:};
+
+/* Parser code to change the way the parser reports errors (include
+   line and column number of the error). */
+parser code {:
+	public static class ConfigParserException extends Exception {
+		public ConfigParserException(String msg) {
+			super(msg);
+		}
+	}
+	public HashSet<UserConf> getUserConf() {
+		return config;
+	}
+	public void setDefaultConf(UserConf defaultConfig) {
+		this.defaultConfig = defaultConfig;
+	}
+    /* Change the method report_error so it will display the line and
+       column of where the error occurred in the input as well as the
+       reason for the error which is passed into the method in the
+       String 'message'. */
+    public void report_error(String message, Object info) {
+        /* Create a StringBuffer called 'm' with the string 'Error' in it. */
+    	errorMsgBuffer = new StringBuffer();
+   
+        /* Check if the information passed to the method is the same
+           type as the type java_cup.runtime.Symbol. */
+        if (info instanceof java_cup.runtime.Symbol) {
+            /* Declare a java_cup.runtime.Symbol object 's' with the
+               information in the object info that is being typecasted
+               as a java_cup.runtime.Symbol object. */
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+   
+            /* Check if the line number in the input is greater or
+               equal to zero. */
+            if (s.left >= 0) {                
+                /* Add to the end of the StringBuffer error message
+                   the line number of the error in the input. */
+            	errorMsgBuffer.append(" in line "+ s.left);   
+                /* Check if the column number in the input is greater
+                   or equal to zero. */
+                if (s.right >= 0)                    
+                    /* Add to the end of the StringBuffer error message
+                       the column number of the error in the input. */
+                	errorMsgBuffer.append(", column "+ s.right);
+            }
+        }
+   
+        /* Add to the end of the StringBuffer error message created in
+           this method the message that was passed into this method. */
+        //errorMsgBuffer.append(message);       
+        /* Print the contents of the StringBuffer 'errorMsgBuffer', which contains
+           an error message, out on a line. */
+        //System.err.println(errorMsgBuffer);
+    }
+   
+    /* Change the method report_fatal_error so when it reports a fatal
+       error it will display the line and column number of where the
+       fatal error occurred in the input as well as the reason for the
+       fatal error which is passed into the method in the object
+       'message' and then exit.*/
+    public void report_fatal_error(String message, Object info) throws Exception {
+        report_error(message, info);        
+        throw new ConfigParserException("Syntax error: " + errorMsgBuffer.toString());
+    }
+    private StringBuffer errorMsgBuffer;
+    	// TODO 2014-07-27 off-by-one(+1) at e.g. Var-decls, otherwise correct
+	// current line where lexed symbol occured
+	protected int line;
+	// current column where lexed symbol occured
+	protected int column;
+	protected UserConf defaultConfig;
+	protected HashSet<UserConf> config;
+	protected Deque<UserConf> deque;
+:};
+   
+
+   
+/* ------------Declaration of Terminals and Non Terminals Section----------- */
+/* Terminals (tokens returned by the scanner).  
+   Terminals that have no value are listed first and then terminals
+   that do have an value, in this case an integer value, are listed on
+   the next line down.
+ */
+terminal String
+	T_LBRACE,			// {
+	T_RBRACE,			// }
+	T_SEMI,				// ;
+	T_ASSIGN,			// =
+	T_GLOBAL_ID,		// global
+	T_USER_ID,			// [A-Za-z_][A-Za-z0-9_]*
+	T_INPUT,
+	T_ORIGINAL,
+	T_FILETYPE,
+	T_MACROPATTERN,
+	T_LOGDIR,
+	T_LOGPREFIX,
+	T_LOGROTATE,
+	T_MODE,
+	T_DEBUG,
+	T_STRING,
+	T_BLACKLIST
+;
+
+terminal Integer
+	T_DECIMAL_NUMBER
+;
+
+terminal Configuration.Mode
+	T_REPORT,
+	T_SPLIT,
+	T_AREPORT,
+	T_ASPLIT,
+	T_MERGE
+;
+
+non terminal HashSet<UserConf>
+	n_config_file
+;
+non terminal Object	
+	n_global_config,
+	n_global_directives,
+	n_global_optional_directive,
+	n_local_configs,
+	n_local_config,
+	n_local_directives,
+	n_mandatory_directive,
+	n_optional_directive,
+	n_input_directive,
+	n_original_directive,
+	n_filetype_directive,
+	n_macropattern_directive,
+	n_logdir_directive,
+	n_logprefix_directive,
+	n_logrotate_directive,
+	n_mode_directive,
+	n_debug_directive,
+	n_blacklist_directive,
+	n_blacklist_files,
+	n_blacklist_file
+;
+
+non terminal Configuration.Mode
+	n_valid_modes
+;
+   
+/* ----------------------------Grammar Section-------------------- */
+/* productions    */
+
+n_config_file ::= n_global_config:conf
+	{:
+		//System.out.println("DEQUE:" + parser.deque);
+		//System.out.println("SET:" + parser.config);
+	:}
+	| /* empty */
+;
+	
+n_global_config ::= T_GLOBAL_ID:id
+	{:
+		// global user configuration starts -- no parent config
+		parser.deque.addFirst(new UserConf(id, parser.defaultConfig));
+	:}
+	T_LBRACE n_global_directives n_local_configs:confs T_RBRACE T_SEMI
+	{:
+		// global user configuration ends
+		parser.config.add(parser.deque.removeFirst());
+	:}
+;
+// all global directives are optional
+n_global_directives ::= n_global_directives n_global_optional_directive T_SEMI
+	| /* empty */
+;
+n_global_optional_directive ::= n_mandatory_directive | n_optional_directive
+;
+
+// local configs need at least a leading mandatory directive
+n_local_directives ::= n_local_directives n_optional_directive T_SEMI
+	| n_mandatory_directive T_SEMI
+;
+
+// input directive is mandatory
+n_mandatory_directive ::= n_input_directive;
+
+n_optional_directive ::= n_debug_directive
+	| n_filetype_directive
+	| n_logdir_directive
+	| n_logprefix_directive
+	| n_logrotate_directive
+	| n_macropattern_directive
+	| n_mode_directive
+	| n_blacklist_directive
+;
+n_debug_directive ::= T_DEBUG T_ASSIGN T_DECIMAL_NUMBER:debug
+	{:
+		parser.deque.peekFirst().setMakeDebugOutput(debug != 0 ? true : false);
+	:}
+;
+n_filetype_directive ::= T_FILETYPE T_ASSIGN T_STRING:filetype
+	{:
+		parser.deque.peekFirst().setFilePattern(filetype);
+	:}
+;
+n_input_directive ::= T_INPUT T_ASSIGN T_STRING:input
+	{:
+		parser.deque.peekFirst().setInputDirectory(input);
+	:}
+;
+n_logdir_directive ::= T_LOGDIR T_ASSIGN T_STRING:logdir
+	{:
+		parser.deque.peekFirst().setLogDirectory(logdir);
+	:}
+;
+n_logprefix_directive ::= T_LOGPREFIX T_ASSIGN T_STRING:logprefix
+	{:
+		parser.deque.peekFirst().setLogPrefix(logprefix);
+	:}
+;
+n_logrotate_directive ::= T_LOGROTATE T_ASSIGN T_DECIMAL_NUMBER:logrotateN
+	{:
+		parser.deque.peekFirst().setLogRotateN(logrotateN);
+	:}
+;
+n_macropattern_directive ::= T_MACROPATTERN T_ASSIGN T_STRING:macropattern
+	{:
+		parser.deque.peekFirst().setMacroPattern(macropattern);
+	:}
+;
+n_mode_directive ::= T_MODE T_ASSIGN n_valid_modes:mode
+	{:
+		parser.deque.peekFirst().setMode(mode);
+	:}		
+;
+
+n_original_directive ::= T_ORIGINAL T_ASSIGN T_STRING:original
+	{:
+		parser.deque.peekFirst().setOriginalDirectory(original);
+	:}
+;
+
+n_blacklist_directive ::= T_BLACKLIST T_LBRACE n_blacklist_files T_RBRACE
+;
+
+n_blacklist_files ::= n_blacklist_files n_blacklist_file
+	| n_blacklist_file
+;
+n_blacklist_file ::= T_STRING:file T_SEMI
+	{:
+		parser.deque.peekFirst().addToBlackList(file);
+	:}
+;
+n_valid_modes ::= T_REPORT:mode {: RESULT = mode; :}
+	| T_SPLIT:mode {: RESULT = mode; :}
+	| T_AREPORT:mode {: RESULT = mode; :}
+	| T_ASPLIT:mode {: RESULT = mode; :}
+	| T_MERGE:mode T_LBRACE n_original_directive T_SEMI T_RBRACE {: RESULT = mode; :}
+;
+
+
+n_local_configs ::= n_local_configs n_local_config:conf
+	{:
+	:}
+	| /* empty */
+;
+
+n_local_config ::= T_USER_ID:id 
+	{:
+		UserConf parent = parser.deque.peekFirst();
+		// user directive renders parent conf inactive for later execution, besides value retrieval
+		parent.setIsOverridden(true);
+		// new configuration starts -- parent is global
+		parser.deque.addFirst(new UserConf(id, parent));
+	:}
+	T_LBRACE:lb n_local_directives T_RBRACE:rb T_SEMI:semi
+	{:
+		// recent configuration ends -- top-most is popped into hashset
+		parser.config.add(parser.deque.removeFirst());
+	:}
+;
