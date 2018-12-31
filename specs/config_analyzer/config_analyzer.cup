@@ -175,7 +175,7 @@ n_config_file ::= n_global_config:conf
 		//System.out.println("DEQUE:" + parser.deque);
 		//System.out.println("SET:" + parser.config);
 	:}
-	| /* empty */
+	//| /* empty */
 ;
 	
 n_global_config ::= T_GLOBAL_ID:id

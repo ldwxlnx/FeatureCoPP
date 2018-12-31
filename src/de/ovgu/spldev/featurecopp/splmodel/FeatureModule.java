@@ -498,7 +498,6 @@ public class FeatureModule implements Comparable<FeatureModule> {
 				if (!solver.solve()) {
 					isDead = true;
 				}
-				// write csp results to separate logfile
 				if (logger != null) {
 					logger.writeDebug(
 							String.format("RID#%d Choco={%s} => %d", occ_uid,

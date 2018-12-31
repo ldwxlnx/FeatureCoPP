@@ -380,9 +380,9 @@ public class FeatureScopeManager {
 									+ featureOccurrence.getEndLine() + ")");
 							logger.writeDebug("DIRECTIVE=" + featureOccurrence);
 							logger.writeDebug(
-									"SYMBOLMAP=" + stats.symbolsMapToString());
+									"SYMS_USED=" + stats.symbolsMapToString());
 							logger.writeDebug(
-									"BINDINGMAP=" + stats.bindingMapToString());
+									"SYMS_DECL=" + stats.bindingMapToString());
 							// symbol /binding map not longer needed -prevent
 							// from memory shortage
 							stats.unsetMaps();
