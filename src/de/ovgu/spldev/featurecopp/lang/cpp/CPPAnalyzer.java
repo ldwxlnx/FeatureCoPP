@@ -272,11 +272,14 @@ public final class CPPAnalyzer implements Processable {
 	}
 	// TODO: WON'T WORK FOR OLD APPLE '\r' line breaks
 	private String collectFeatureExpression(StringBuilder originalSrc)
-			throws IOException {
+			throws Exception {
 		// TODO read tokens until newline (EXPR, etc.)
 		StringBuilder sb = new StringBuilder();
 		while (true) {
 			Token currToken = cppScanner.yylex();
+			if(currToken == null) {
+				throw new Exception(String.format("Unexpected null token in [%s]", sb.toString()));
+			}
 			String currTokenVal = currToken.value;
 			// add directive expression tokens to hook file
 			originalSrc.append(currTokenVal);

@@ -1,7 +1,6 @@
 package de.ovgu.spldev.featurecopp.splmodel;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -9,13 +8,7 @@ import java.util.regex.Pattern;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
-import org.chocosolver.solver.constraints.Constraint;
-import org.chocosolver.solver.constraints.Propagator;
-import org.chocosolver.solver.constraints.nary.cnf.LogOp;
-import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
-import org.chocosolver.solver.variables.RealVar;
-import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.MathUtils;
 
 import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser;
