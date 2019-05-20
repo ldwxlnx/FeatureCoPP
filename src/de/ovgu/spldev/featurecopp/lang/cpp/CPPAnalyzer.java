@@ -127,8 +127,8 @@ public final class CPPAnalyzer implements Processable {
 					// file (base or feature)
 					if (sym.type == TYPE.ELIF) {
 						if(featureScopeManager.getCurrentNumOfBranches() == 0) {
-							//throw new Exception(symVal + " has no previous #if*");
-							handleUnbalancedFile(dstFile, symVal + " has no previous #if*");
+							//throw new Exception(String.format("Line %d: %s has no preceding #if*", sym.line, symVal));
+							handleUnbalancedFile(dstFile, String.format("Line %d: %s has no preceding #if*", sym.line, symVal));
 							return;
 						}
 						// SIBLING ON TOP
@@ -145,10 +145,10 @@ public final class CPPAnalyzer implements Processable {
 					break;
 				}
 				case ELSE: { // SIBLING ON TOP
-					//System.err.println(symVal);
-					if(featureScopeManager.getCurrentNumOfBranches() == 0) {
-						//throw new Exception(symVal + " has no previous #if*");
-						handleUnbalancedFile(dstFile, symVal + " has no previous #if*");
+					//System.err.println(symVal);					
+					if(featureScopeManager.size() == 1 || featureScopeManager.getCurrentNumOfBranches() == 0) {
+						//throw new Exception(String.format("Line %d: %s has no preceding #if*", sym.line, symVal));						
+						handleUnbalancedFile(dstFile, String.format("Line %d: %s has no preceding #if*", sym.line, symVal));
 						return;
 					}
 					// remove line terminators after directive token (otherwise
@@ -205,7 +205,7 @@ public final class CPPAnalyzer implements Processable {
 			if (logger != null) {
 				logger.writeFail(String.format("Line %d: %s", currLine,
 						e.getMessage()));
-				//e.printStackTrace();
+				e.printStackTrace();
 				// COMPLETENESS! these errors (e.g. asymmetric directives) result in unsafe output, hence purging and exit
 				// NOT CRITICAL: errors related to C-Parsing and CSP -> handled in FeatureScopeManager.writeBackControlledCodeCache
 				Configuration.purgeOutputDir(logger, outputDir.toString());
