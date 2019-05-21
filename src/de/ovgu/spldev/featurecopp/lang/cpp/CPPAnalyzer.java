@@ -117,7 +117,8 @@ public final class CPPAnalyzer implements Processable {
 					openCount++;
 				}
 				case ELIF: {
-					//System.err.println(symVal);
+					System.err.println(symVal);
+					System.err.println(sym.line);
 					// store original directive to provide to hook file
 					StringBuilder originalSrc = new StringBuilder(symVal);
 					// retrieve complete feature expression -- all meanwhile
@@ -146,7 +147,8 @@ public final class CPPAnalyzer implements Processable {
 					break;
 				}
 				case ELSE: { // SIBLING ON TOP
-					//System.err.println(symVal);					
+					System.err.println(symVal);
+					System.err.println(sym.line);
 					if(featureScopeManager.size() == 1 || featureScopeManager.getCurrentNumOfBranches() == 0) {
 						//throw new Exception(String.format("Line %d: %s has no preceding #if*", sym.line, symVal));						
 						handleUnbalancedFile(dstFile, String.format("Line %d: %s has no preceding #if*", sym.line, symVal));
@@ -163,7 +165,8 @@ public final class CPPAnalyzer implements Processable {
 					break;
 				}
 				case ENDIF: { // SIBLING ON TOP
-					//System.err.println(symVal);
+					System.err.println(symVal);
+					System.err.println(sym.line);
 					endifCount++;
 					closeCount++;
 					// remove line terminators after directive token
@@ -197,6 +200,7 @@ public final class CPPAnalyzer implements Processable {
 			if(openCount != closeCount) {				
 				//throw new Exception("Asymmetric opening and closing of directives (o=" + openCount + "<->c=" +closeCount + ")!");
 				handleUnbalancedFile(dstFile, "Asymmetric opening and closing of directives (o=" + openCount + "<->c=" +closeCount + ")!");
+				System.exit(0);
 				return;
 			}
 			charCount += cppScanner.numOfChars();
