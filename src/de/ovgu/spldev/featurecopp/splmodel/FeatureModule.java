@@ -103,7 +103,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * Count all #elif roles of this feature
 	 * @return number of elif roles
 	 */
-	public long numOfElifdef() {
+	public long numOfElif() {
 		long count = 0;
 		for(FeatureOccurrence fo : featureOccurrences) {
 			if(fo.ftree instanceof ElifTree) {
@@ -130,7 +130,14 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * @return true, if simple absence condition, false otherwise
 	 */
 	public boolean isSimpleAbsence() {
-		return featureExprAST.isSimpleNegation();
+		return featureExprAST.isSimpleAbsence();
+	}
+	/**
+	 * Indicates whether feature relies on simple presence condition
+	 * @return true, if simple presence condition, false otherwise
+	 */
+	public boolean isSimplePresence() {
+		return featureExprAST.isSimplePresence();
 	}
 
 	/**

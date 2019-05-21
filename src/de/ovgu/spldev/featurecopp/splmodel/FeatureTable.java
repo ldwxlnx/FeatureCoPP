@@ -137,6 +137,82 @@ public class FeatureTable {
 		}
 		return count;
 	}
+	public static class DirectiveCount {
+		public long getIfCount() {
+			return ifCount;
+		}
+		public void setIfCount(long ifCount) {
+			this.ifCount = ifCount;
+		}
+		public long getIfdefCount() {
+			return ifdefCount;
+		}
+		public void setIfdefCount(long ifdefCount) {
+			this.ifdefCount = ifdefCount;
+		}
+		public long getIfndefCount() {
+			return ifndefCount;
+		}
+		public void setIfndefCount(long ifndefCount) {
+			this.ifndefCount = ifndefCount;
+		}
+		public long getElifCount() {
+			return elifCount;
+		}
+		public void setElifCount(long elifCount) {
+			this.elifCount = elifCount;
+		}
+		public long getElseCount() {
+			return elseCount;
+		}
+		public void setElseCount(long elseCount) {
+			this.elseCount = elseCount;
+		}
+		private long ifCount;
+		private long ifdefCount;
+		private long ifndefCount;
+		private long elifCount;
+		private long elseCount;
+	}
+	public static DirectiveCount countRequestedDirectives() {
+		DirectiveCount count = new DirectiveCount();
+		for (FeatureModule m : featureTable.values()) {
+			if (m.isRequested()) {
+				count.setIfCount(count.getIfCount() + m.numOfIf());
+				count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef());
+				count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef());
+				count.setElifCount(count.getElifCount() + m.numOfElif());
+				count.setElseCount(count.getElseCount() + m.numOfElse());
+			}
+		}
+		return count;
+	}
+	public static DirectiveCount countRequestedSimpleAbsenceDirectives() {
+		DirectiveCount count = new DirectiveCount();
+		for (FeatureModule m : featureTable.values()) {
+			if (m.isRequested() && m.isSimpleAbsence()) {
+				count.setIfCount(count.getIfCount() + m.numOfIf());
+				//count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef());
+				count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef());
+				count.setElifCount(count.getElifCount() + m.numOfElif());
+				count.setElseCount(count.getElseCount() + m.numOfElse());
+			}
+		}
+		return count;
+	}
+	public static DirectiveCount countRequestedSimplePresenceDirectives() {
+		DirectiveCount count = new DirectiveCount();
+		for (FeatureModule m : featureTable.values()) {
+			if (m.isRequested() && m.isSimplePresence()) {
+				count.setIfCount(count.getIfCount() + m.numOfIf());
+				count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef());
+				//count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef());
+				count.setElifCount(count.getElifCount() + m.numOfElif());
+				count.setElseCount(count.getElseCount() + m.numOfElse());
+			}
+		}
+		return count;
+	}
 
 	/** FeatureTree.featureExpressionToString() => Feature */
 	private static HashMap<String, FeatureModule> featureTable = new HashMap<String, FeatureModule>();

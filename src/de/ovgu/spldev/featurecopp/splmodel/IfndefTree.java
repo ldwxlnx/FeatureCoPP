@@ -15,5 +15,12 @@ public class IfndefTree extends SynthesizedTree {
 		super.setRoot(root);		
 		synthesizedSemanticsRoot = new FeatureTree.UnaryLogNeg(null, new FeatureTree.Defined(null, clonedSubtree, "defined"), "!");
 	}
+	public boolean isSimpleAbsence() {
+		return true;
+	}
+
+	public boolean isSimplePresence() {
+		return false;
+	}
 	public static long count; 
 }

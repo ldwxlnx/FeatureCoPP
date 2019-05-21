@@ -64,10 +64,13 @@ public class FeatureTree {
 	 public int getTanglingDegree() {
 		 return tdMap.getTotalObjMacroCount();
 	 }
-	 public boolean isSimpleNegation() {
+	 public boolean isSimpleAbsence() {
 		 return root.left == null
 				 && root instanceof UnaryLogNeg 
 				 && (root.right instanceof Macro || root.right instanceof Defined);
+	 }
+	 public boolean isSimplePresence() {
+		 return root instanceof Macro || root instanceof Defined;
 	 }
 
 	/**

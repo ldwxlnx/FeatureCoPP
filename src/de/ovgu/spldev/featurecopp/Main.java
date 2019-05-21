@@ -111,8 +111,6 @@ public class Main {
 			logger.writeInfo(String.format("Variation points [Total/Requested]=[%6d/%6d]",
 					FeatureTable.calcTotalNumberOfRoles(),
 					FeatureTable.calcNumberOfRequestedRoles()));
-			logger.writeInfo(String.format("Requested #else=%d", FeatureTable.countElse()));
-			logger.writeInfo(String.format("Requested absence (incl. #else)=%d", FeatureTable.countSimpleAbsence()));
 			logger.closeAllStreams();
 
 			// TODO makes external reporting obsolete?

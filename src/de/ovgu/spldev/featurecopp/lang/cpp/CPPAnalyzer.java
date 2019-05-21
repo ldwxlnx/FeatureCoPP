@@ -237,12 +237,40 @@ public final class CPPAnalyzer implements Processable {
 	public void showStatistics() {
 		if (logger != null) {
 			logger.writeInfo("Statistics:");
-			logger.writeInfo("Conditional directives (total/requested)");
-			logger.writeInfo(String.format("#if     [%6d/%6d]", IfTree.count, 0));
-			logger.writeInfo(String.format("#ifdef  [%6d/%6d]", IfdefTree.count, 0));
-			logger.writeInfo(String.format("#ifndef [%6d/%6d]", IfndefTree.count, 0));
-			logger.writeInfo(String.format("#elif   [%6d/%6d]", ElifTree.count, 0));
-			logger.writeInfo(String.format("#else   [%6d/%6d]", ElseTree.count, 0));
+			logger.writeInfo("Conditional directives (total/requested/simple absence/simple presence)");
+			FeatureTable.DirectiveCount directiveCountTotal = FeatureTable.countRequestedDirectives();
+			FeatureTable.DirectiveCount directiveCountAbsence = FeatureTable.countRequestedSimpleAbsenceDirectives();
+			FeatureTable.DirectiveCount directiveCountPresence = FeatureTable.countRequestedSimplePresenceDirectives();
+			logger.writeInfo(String.format("#if     [%6d/%6d/%6d/%6d]",
+					IfTree.count,
+					directiveCountTotal.getIfCount(),
+					directiveCountAbsence.getIfCount(),
+					directiveCountPresence.getIfCount()
+					));
+			logger.writeInfo(String.format("#ifdef  [%6d/%6d/%6d/%6d]",
+					IfdefTree.count,
+					directiveCountTotal.getIfdefCount(),
+					directiveCountAbsence.getIfdefCount(),
+					directiveCountPresence.getIfdefCount()
+					));
+			logger.writeInfo(String.format("#ifndef [%6d/%6d/%6d/%6d]",
+					IfndefTree.count,
+					directiveCountTotal.getIfndefCount(),
+					directiveCountAbsence.getIfndefCount(),
+					directiveCountPresence.getIfndefCount()
+					));
+			logger.writeInfo(String.format("#elif   [%6d/%6d/%6d/%6d]",
+					ElifTree.count,
+					directiveCountTotal.getElifCount(),
+					directiveCountAbsence.getElifCount(),
+					directiveCountPresence.getElifCount()
+					));
+			logger.writeInfo(String.format("#else   [%6d/%6d/%6d/%6d]",
+					ElseTree.count,
+					directiveCountTotal.getElseCount(),
+					directiveCountAbsence.getElseCount(),
+					directiveCountPresence.getElseCount()
+					));
 			logger.writeInfo("#endif=" + endifCount);
 			logger.writeInfo(String.format("Opening/Closing [%d/%d]", endifCount, (IfTree.count + IfdefTree.count + IfndefTree.count)));
 			ObjMacroHistogram objMacroHistogram = ExpressionParser.getObjMacroHistogramProj();
