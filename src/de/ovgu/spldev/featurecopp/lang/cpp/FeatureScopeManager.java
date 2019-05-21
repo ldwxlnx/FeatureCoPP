@@ -248,10 +248,6 @@ public class FeatureScopeManager {
 													// bottom, hence minus 1
 		// should conditional expression not be filtered by user request?
 		if (!featureTree.containsObjMacro(requestPattern)) {
-			// if (!requestPattern.matcher(featureTree.toString()).matches()) {
-			// if
-			// (!requestPattern.matcher(featureTree.featureExprToString()).matches())
-			// {
 			featureModule.unsetRequested();
 		}
 		// feature extraction requested!

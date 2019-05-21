@@ -19,6 +19,7 @@ import de.ovgu.spldev.featurecopp.lang.cpp.ExpressionParser.ObjMacroHistogram;
 import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.splmodel.ElifTree;
 import de.ovgu.spldev.featurecopp.splmodel.ElseTree;
+import de.ovgu.spldev.featurecopp.splmodel.FeatureTable;
 import de.ovgu.spldev.featurecopp.splmodel.IfTree;
 import de.ovgu.spldev.featurecopp.splmodel.IfdefTree;
 import de.ovgu.spldev.featurecopp.splmodel.IfndefTree;
@@ -223,13 +224,14 @@ public final class CPPAnalyzer implements Processable {
 	public void showStatistics() {
 		if (logger != null) {
 			logger.writeInfo("Statistics:");
-			logger.writeInfo("#if=" + IfTree.count + ";#ifdef="
-					+ IfdefTree.count + ";#ifndef=" + IfndefTree.count
-					+ ";Total="
-					+ (IfTree.count + IfdefTree.count + IfndefTree.count));
-			logger.writeInfo("#elif=" + ElifTree.count);
-			logger.writeInfo("#else=" + ElseTree.count);
-			logger.writeInfo("#endif=" + endifCount);			
+			logger.writeInfo("Conditional directives (total/requested)");
+			logger.writeInfo(String.format("#if     [%6d/%6d]", IfTree.count, 0));
+			logger.writeInfo(String.format("#ifdef  [%6d/%6d]", IfdefTree.count, 0));
+			logger.writeInfo(String.format("#ifndef [%6d/%6d]", IfndefTree.count, 0));
+			logger.writeInfo(String.format("#elif   [%6d/%6d]", ElifTree.count, 0));
+			logger.writeInfo(String.format("#else   [%6d/%6d]", ElseTree.count, 0));
+			logger.writeInfo("#endif=" + endifCount);
+			logger.writeInfo(String.format("Opening/Closing [%d/%d]", endifCount, (IfTree.count + IfdefTree.count + IfndefTree.count)));
 			ObjMacroHistogram objMacroHistogram = ExpressionParser.getObjMacroHistogramProj();
 			logger.writeInfo("SD_OLD=" + objMacroHistogram.toString());
 			logger.writeInfo("SD_OLD_max=" + objMacroHistogram.getMostScatteredObjMacro());

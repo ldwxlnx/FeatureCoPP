@@ -105,11 +105,14 @@ public class Main {
 					Time.nano2Sec(Time.elapsedNanoSecs(start))));
 			// TODO
 			cppAnalyzer.showStatistics();
-			logger.writeInfo("Total unique feature count: "
-					+ FeatureTable.getFeatureCount());
-			logger.writeInfo("Total requested feature count: "
-					+ FeatureTable.calcNumberOfRequestedFeatures());
-
+			logger.writeInfo(String.format("Unique features  [Total/Requested]=[%6d/%6d]",
+					FeatureTable.getFeatureCount(),
+					FeatureTable.calcNumberOfRequestedFeatures()));
+			logger.writeInfo(String.format("Variation points [Total/Requested]=[%6d/%6d]",
+					FeatureTable.calcTotalNumberOfRoles(),
+					FeatureTable.calcNumberOfRequestedRoles()));
+			logger.writeInfo(String.format("Requested #else=%d", FeatureTable.countElse()));
+			logger.writeInfo(String.format("Requested absence (incl. #else)=%d", FeatureTable.countSimpleAbsence()));
 			logger.closeAllStreams();
 
 			// TODO makes external reporting obsolete?

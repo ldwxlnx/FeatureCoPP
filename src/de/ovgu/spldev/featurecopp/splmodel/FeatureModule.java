@@ -59,6 +59,79 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	int numOfOccurrences() {
 		return featureOccurrences.size();
 	}
+	
+	/**
+	 * Count all #if roles of this feature
+	 * @return number of if roles
+	 */
+	public long numOfIf() {
+		long count = 0;
+		for(FeatureOccurrence fo : featureOccurrences) {
+			if(fo.ftree instanceof IfTree) {
+				count++;
+			}
+		}
+		return count;
+	}
+	/**
+	 * Count all #ifdef roles of this feature
+	 * @return number of ifdef roles
+	 */
+	public long numOfIfdef() {
+		long count = 0;
+		for(FeatureOccurrence fo : featureOccurrences) {
+			if(fo.ftree instanceof IfdefTree) {
+				count++;
+			}
+		}
+		return count;
+	}
+	/**
+	 * Count all #ifndef roles of this feature
+	 * @return number of ifndef roles
+	 */
+	public long numOfIfndef() {
+		long count = 0;
+		for(FeatureOccurrence fo : featureOccurrences) {
+			if(fo.ftree instanceof IfndefTree) {
+				count++;
+			}
+		}
+		return count;
+	}
+	/**
+	 * Count all #elif roles of this feature
+	 * @return number of elif roles
+	 */
+	public long numOfElifdef() {
+		long count = 0;
+		for(FeatureOccurrence fo : featureOccurrences) {
+			if(fo.ftree instanceof ElifTree) {
+				count++;
+			}
+		}
+		return count;
+	}
+	/**
+	 * Count all #else roles of this feature
+	 * @return number of else roles
+	 */
+	public long numOfElse() {
+		long count = 0;
+		for(FeatureOccurrence fo : featureOccurrences) {
+			if(fo.ftree instanceof ElseTree) {
+				count++;
+			}
+		}
+		return count;
+	}
+	/**
+	 * Indicates whether feature relies on simple absence condition
+	 * @return true, if simple absence condition, false otherwise
+	 */
+	public boolean isSimpleAbsence() {
+		return featureExprAST.isSimpleNegation();
+	}
 
 	/**
 	 * Creates a FeatureModule for base file. This feature module differs from
@@ -137,7 +210,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 					+ "%" + (indent + 1) + "s<occs count=\"%d\" dead=\"%d\" valid=\"%d\">%s", // linebreak
 					Configuration.XML_INDENT_WHITESPACE, uid, isRequested ? featureModuleFile : "", isRequested, Configuration.LINE_SEPARATOR,
 					Configuration.XML_INDENT_WHITESPACE, featureTreeToString(), Configuration.LINE_SEPARATOR,
-					Configuration.XML_INDENT_WHITESPACE, featureExprAST.getTDMap().getTotalObjMacroCount(), Configuration.LINE_SEPARATOR,
+					Configuration.XML_INDENT_WHITESPACE, featureExprAST.getTanglingDegree(), Configuration.LINE_SEPARATOR,
 					Configuration.XML_INDENT_WHITESPACE, nd_avg, Configuration.LINE_SEPARATOR,
 					// no analysis performed -> no statistics to display
 					Configuration.SKIP_ANALYSIS ? "" : String.format("%" + (indent + 1) + "s<sem_avg %s />%s"

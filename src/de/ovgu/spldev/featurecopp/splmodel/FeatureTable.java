@@ -84,16 +84,56 @@ public class FeatureTable {
 		}
 		return count;
 	}
+	/**
+	 * Counts requested number of occurrences (roles)
+	 * 
+	 * @return requested feature count
+	 */
+	public static long calcNumberOfRequestedRoles() {
+		long count = 0;
+		for (FeatureModule m : featureTable.values()) {
+			if (m.isRequested()) {
+				count += m.numOfOccurrences();
+			}
+		}
+		return count;
+	}
 	
 	/**
 	 * Counts total number of occurrences (roles)
 	 * 
-	 * @return requested feature count
+	 * @return requested role count
 	 */
 	public static long calcTotalNumberOfRoles() {
 		long count = 0;
 		for (FeatureModule m : featureTable.values()) {
 			count += m.numOfOccurrences();
+		}
+		return count;
+	}
+	/**
+	 * Counts all else directives in requested feature module 
+	 * @return
+	 */
+	public static long countElse() {
+		long count = 0;
+		for (FeatureModule m : featureTable.values()) {
+			if (m.isRequested()) {
+				count += m.numOfElse();
+			}
+		}
+		return count;
+	}
+	/**
+	 * Accumulate all simple absence conditions including #else directives
+	 * @return number of simple absence conditions
+	 */
+	public static long countSimpleAbsence() {
+		long count = 0;
+		for (FeatureModule m : featureTable.values()) {
+			if (m.isRequested() && m.isSimpleAbsence()) {
+				count++;
+			}
 		}
 		return count;
 	}

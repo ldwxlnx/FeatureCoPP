@@ -57,13 +57,18 @@ public class FeatureTree {
 	public void setTDMap(ExpressionParser.ObjMacroHistogram tdMap) {
 		this.tdMap = tdMap;
 	}
-
+	// needed for merging td maps in else clauses
 	public ExpressionParser.ObjMacroHistogram getTDMap() {
 		return tdMap;
 	}
-	// public int getTanglingDegree() {
-	// return tdMap.getTotalObjMacroCount();
-	// }
+	 public int getTanglingDegree() {
+		 return tdMap.getTotalObjMacroCount();
+	 }
+	 public boolean isSimpleNegation() {
+		 return root.left == null
+				 && root instanceof UnaryLogNeg 
+				 && (root.right instanceof Macro || root.right instanceof Defined);
+	 }
 
 	/**
 	 * Finalizes bottom-up created tree with root node 'root'.
