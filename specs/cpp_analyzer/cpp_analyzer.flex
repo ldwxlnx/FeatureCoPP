@@ -103,6 +103,8 @@ directiveLineTerminator = \\{lineTerminator}
 
 %state STRING_LIT
 %state CHAR_LIT
+// ambiguous tokens after such directives possible (e.g., mistaken as char literal: "Won't work")
+%state ERROR_DIR  
 
 %%
 
@@ -149,6 +151,14 @@ directiveLineTerminator = \\{lineTerminator}
 			System.out.print(yytext);
 		}
 		return genSymbol(CPPAnalyzer.TYPE.ENDIF, yytext);	
+	}
+	^[ \t\f]*"#"[ \t\f]*"error" { 	
+		String yytext = yytext(); 	
+		if(isDebug) {
+			System.out.print(yytext);
+		}
+		yybegin(ERROR_DIR);
+		return genSymbol(CPPAnalyzer.TYPE.ERROR, yytext);	
 	}
 /* switch to string state */
 	\"  {
@@ -215,6 +225,24 @@ directiveLineTerminator = \\{lineTerminator}
 		return genSymbol(CPPAnalyzer.TYPE.SRC, yytext);		
 	}
 } // <YYINITIAL>
+<ERROR_DIR> {
+	{lineTerminator} {
+		String yytext = yytext();
+		if(isDebug) {
+			System.out.print(yytext);
+		}
+		yybegin(YYINITIAL);
+		return genSymbol(CPPAnalyzer.TYPE.LINETERM, yytext);	
+	}
+	/* anything else */
+    [^] {
+    	String yytext = yytext();
+    	if(isDebug) {
+			System.out.print(yytext);
+		}
+		return genSymbol(CPPAnalyzer.TYPE.SRC, yytext);
+    }
+}
 // problems in linux -- necessary for e.g., glibc
 /*JAVA EXAMPLE JFLEX SELF EXTENDED */
 <STRING_LIT> {

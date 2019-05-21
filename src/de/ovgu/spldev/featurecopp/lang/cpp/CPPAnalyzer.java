@@ -55,7 +55,7 @@ public final class CPPAnalyzer implements Processable {
 	}	
 	/** Token classification, also provided to JFlex spec */
 	public static enum TYPE {
-		SRC, IF, IFDEF, IFNDEF, ELIF, ELSE, ENDIF, COMMENT, LINECOMMENT, DIRLT, LINETERM, UNDEF
+		SRC, IF, IFDEF, IFNDEF, ELIF, ELSE, ENDIF, COMMENT, LINECOMMENT, DIRLT, LINETERM, UNDEF, ERROR
 	};
 
 	public static class Token {
@@ -117,8 +117,8 @@ public final class CPPAnalyzer implements Processable {
 					openCount++;
 				}
 				case ELIF: {
-					System.err.println(symVal);
-					System.err.println(sym.line);
+//					System.err.println(symVal);
+//					System.err.println(sym.line);
 					// store original directive to provide to hook file
 					StringBuilder originalSrc = new StringBuilder(symVal);
 					// retrieve complete feature expression -- all meanwhile
@@ -147,8 +147,8 @@ public final class CPPAnalyzer implements Processable {
 					break;
 				}
 				case ELSE: { // SIBLING ON TOP
-					System.err.println(symVal);
-					System.err.println(sym.line);
+//					System.err.println(symVal);
+//					System.err.println(sym.line);
 					if(featureScopeManager.size() == 1 || featureScopeManager.getCurrentNumOfBranches() == 0) {
 						//throw new Exception(String.format("Line %d: %s has no preceding #if*", sym.line, symVal));						
 						handleUnbalancedFile(dstFile, String.format("Line %d: %s has no preceding #if*", sym.line, symVal));
@@ -165,8 +165,8 @@ public final class CPPAnalyzer implements Processable {
 					break;
 				}
 				case ENDIF: { // SIBLING ON TOP
-					System.err.println(symVal);
-					System.err.println(sym.line);
+//					System.err.println(symVal);
+//					System.err.println(sym.line);
 					endifCount++;
 					closeCount++;
 					// remove line terminators after directive token
@@ -191,6 +191,16 @@ public final class CPPAnalyzer implements Processable {
 					featureScopeManager.cacheInMostRecent(symVal + symbols);				
 					break;
 				}
+				case ERROR: { // ambiguous tokens may follow
+					//System.err.println(symVal);
+					//System.err.println(sym.line);
+					String symbols = scanPastLineBreak();
+					// write collected symbols until line break to
+					// corresponding hook file (base or feature)
+					// -> top most is now enclosing
+					featureScopeManager.cacheInMostRecent(symVal + symbols);	
+					break;
+				}
 				default: // CONTROLLED CODE (SINGLE SYMBOLS) OR ANYTHING ELSE
 					//System.out.print(symVal);
 					featureScopeManager.cacheInMostRecent(symVal);
@@ -200,7 +210,6 @@ public final class CPPAnalyzer implements Processable {
 			if(openCount != closeCount) {				
 				//throw new Exception("Asymmetric opening and closing of directives (o=" + openCount + "<->c=" +closeCount + ")!");
 				handleUnbalancedFile(dstFile, "Asymmetric opening and closing of directives (o=" + openCount + "<->c=" +closeCount + ")!");
-				System.exit(0);
 				return;
 			}
 			charCount += cppScanner.numOfChars();
@@ -306,7 +315,7 @@ public final class CPPAnalyzer implements Processable {
 		Token nextToken = null;
 		// grab all scanned tokens to add into destination file
 		StringBuilder sb = new StringBuilder();
-		do {
+		do {			
 			nextToken = cppScanner.yylex();
 			// End-of-file?
 			if (nextToken == null) {
