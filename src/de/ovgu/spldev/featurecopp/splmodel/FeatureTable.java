@@ -152,37 +152,50 @@ public class FeatureTable {
 		DirectiveCount count = new DirectiveCount();
 		for (FeatureModule m : featureTable.values()) {
 			if (m.isRequested()) {
-				count.setIfCount(count.getIfCount() + m.numOfIf());
-				count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef());
-				count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef());
-				count.setElifCount(count.getElifCount() + m.numOfElif());
-				count.setElseCount(count.getElseCount() + m.numOfElse());
+				count.setIfCount(count.getIfCount() + m.numOfIf(false));
+				count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef(false));
+				count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef(false));
+				count.setElifCount(count.getElifCount() + m.numOfElif(false));
+				count.setElseCount(count.getElseCount() + m.numOfElse(false));
 			}
 		}
 		return count;
 	}
-	public static DirectiveCount countRequestedSimpleAbsenceDirectives() {
+	public static DirectiveCount countRequestedLOF() {
+		DirectiveCount lofCount = new DirectiveCount();
+		for (FeatureModule m : featureTable.values()) {
+			if (m.isRequested()) {
+				lofCount.setIfCount(lofCount.getIfCount() + m.numOfIf(true));
+				lofCount.setIfdefCount(lofCount.getIfdefCount() + m.numOfIfdef(true));
+				lofCount.setIfndefCount(lofCount.getIfndefCount() + m.numOfIfndef(true));
+				lofCount.setElifCount(lofCount.getElifCount() + m.numOfElif(true));
+				lofCount.setElseCount(lofCount.getElseCount() + m.numOfElse(true));
+			}
+		}
+		return lofCount;
+	}
+	public static DirectiveCount countRequestedSimpleAbsenceDirectives(boolean useLoF) {
 		DirectiveCount count = new DirectiveCount();
 		for (FeatureModule m : featureTable.values()) {
 			if (m.isRequested() && m.isSimpleAbsence()) {
-				count.setIfCount(count.getIfCount() + m.numOfIf());
-				//count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef());
-				count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef());
-				count.setElifCount(count.getElifCount() + m.numOfElif());
-				count.setElseCount(count.getElseCount() + m.numOfElse());
+				count.setIfCount(count.getIfCount() + m.numOfIf(useLoF));
+				//count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef(useLoF));
+				count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef(useLoF));
+				count.setElifCount(count.getElifCount() + m.numOfElif(useLoF));
+				count.setElseCount(count.getElseCount() + m.numOfElse(useLoF));
 			}
 		}
 		return count;
 	}
-	public static DirectiveCount countRequestedSimplePresenceDirectives() {
+	public static DirectiveCount countRequestedSimplePresenceDirectives(boolean useLoF) {
 		DirectiveCount count = new DirectiveCount();
 		for (FeatureModule m : featureTable.values()) {
 			if (m.isRequested() && m.isSimplePresence()) {
-				count.setIfCount(count.getIfCount() + m.numOfIf());
-				count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef());
-				//count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef());
-				count.setElifCount(count.getElifCount() + m.numOfElif());
-				count.setElseCount(count.getElseCount() + m.numOfElse());
+				count.setIfCount(count.getIfCount() + m.numOfIf(useLoF));
+				count.setIfdefCount(count.getIfdefCount() + m.numOfIfdef(useLoF));
+				//count.setIfndefCount(count.getIfndefCount() + m.numOfIfndef(useLoF));
+				count.setElifCount(count.getElifCount() + m.numOfElif(useLoF));
+				count.setElseCount(count.getElseCount() + m.numOfElse(useLoF));
 			}
 		}
 		return count;

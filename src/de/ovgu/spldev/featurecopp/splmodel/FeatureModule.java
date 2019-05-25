@@ -64,11 +64,11 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * Count all #if roles of this feature
 	 * @return number of if roles
 	 */
-	public long numOfIf() {
+	public long numOfIf(boolean useLoF) {
 		long count = 0;
 		for(FeatureOccurrence fo : featureOccurrences) {
 			if(fo.ftree instanceof IfTree) {
-				count++;
+				count += useLoF ? (fo.lineEnd - fo.lineStart) + 1 : 1;
 			}
 		}
 		return count;
@@ -77,11 +77,11 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * Count all #ifdef roles of this feature
 	 * @return number of ifdef roles
 	 */
-	public long numOfIfdef() {
+	public long numOfIfdef(boolean useLoF) {
 		long count = 0;
 		for(FeatureOccurrence fo : featureOccurrences) {
 			if(fo.ftree instanceof IfdefTree) {
-				count++;
+				count += useLoF ? (fo.lineEnd - fo.lineStart) + 1 : 1;
 			}
 		}
 		return count;
@@ -90,11 +90,11 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * Count all #ifndef roles of this feature
 	 * @return number of ifndef roles
 	 */
-	public long numOfIfndef() {
+	public long numOfIfndef(boolean useLoF) {
 		long count = 0;
 		for(FeatureOccurrence fo : featureOccurrences) {
 			if(fo.ftree instanceof IfndefTree) {
-				count++;
+				count += useLoF ? (fo.lineEnd - fo.lineStart) + 1 : 1;
 			}
 		}
 		return count;
@@ -103,11 +103,11 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * Count all #elif roles of this feature
 	 * @return number of elif roles
 	 */
-	public long numOfElif() {
+	public long numOfElif(boolean useLoF) {
 		long count = 0;
 		for(FeatureOccurrence fo : featureOccurrences) {
 			if(fo.ftree instanceof ElifTree) {
-				count++;
+				count += useLoF ? (fo.lineEnd - fo.lineStart) + 1 : 1;
 			}
 		}
 		return count;
@@ -116,11 +116,11 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 * Count all #else roles of this feature
 	 * @return number of else roles
 	 */
-	public long numOfElse() {
+	public long numOfElse(boolean useLoF) {
 		long count = 0;
 		for(FeatureOccurrence fo : featureOccurrences) {
 			if(fo.ftree instanceof ElseTree) {
-				count++;
+				count += useLoF ? (fo.lineEnd - fo.lineStart) + 1 : 1;
 			}
 		}
 		return count;

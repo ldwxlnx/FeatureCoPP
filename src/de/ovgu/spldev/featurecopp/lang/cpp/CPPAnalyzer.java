@@ -237,47 +237,54 @@ public final class CPPAnalyzer implements Processable {
 	public void showStatistics() {
 		if (logger != null) {
 			logger.writeInfo("Statistics:");
-			logger.writeInfo("Conditional directives (total/requested/simple absence/simple presence/CC)");
 			FeatureTable.DirectiveCount directiveCountTotal = FeatureTable.countRequestedDirectives();
-			FeatureTable.DirectiveCount directiveCountAbsence = FeatureTable.countRequestedSimpleAbsenceDirectives();
-			FeatureTable.DirectiveCount directiveCountPresence = FeatureTable.countRequestedSimplePresenceDirectives();
-			logger.writeInfo(String.format("#if     [%6d/%6d/%6d/%6d/%6d]",
+			FeatureTable.DirectiveCount directiveLoFTotal = FeatureTable.countRequestedLOF();
+			FeatureTable.DirectiveCount directiveCountAbsence = FeatureTable.countRequestedSimpleAbsenceDirectives(false);
+			FeatureTable.DirectiveCount directiveLoFAbsence = FeatureTable.countRequestedSimpleAbsenceDirectives(true);
+			FeatureTable.DirectiveCount directiveCountPresence = FeatureTable.countRequestedSimplePresenceDirectives(false);
+			FeatureTable.DirectiveCount directiveLoFPresence = FeatureTable.countRequestedSimpleAbsenceDirectives(true);
+			logger.writeInfo(String.format("VP:     [%6s|%13s|%13s|%13s|%6s]", "Total", 
+					"Analyzed", "Absence", "Presence", "CC"));
+			logger.writeInfo(String.format("        [%6s|%6s/%6s|%6s/%6s|%6s/%6s|%6s]",
+					"N", "N", "LoF", "N", "LoF", "N", "LoF", "N"));
+			logger.writeInfo(String.format("#if     [%6d|%6d/%6d|%6d/%6d|%6d/%6d|%6d]",
 					IfTree.count,
-					directiveCountTotal.getIfCount(),
-					directiveCountAbsence.getIfCount(),
-					directiveCountPresence.getIfCount(),
+					directiveCountTotal.getIfCount(), directiveLoFTotal.getIfCount(),
+					directiveCountAbsence.getIfCount(), directiveLoFAbsence.getIfCount(),
+					directiveCountPresence.getIfCount(), directiveLoFPresence.getIfCount(),
 					directiveCountAbsence.getIfCount()
 					));
-			logger.writeInfo(String.format("#ifdef  [%6d/%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#ifdef  [%6d|%6d/%6d|%6d/%6d|%6d/%6d|%6d]",
 					IfdefTree.count,
-					directiveCountTotal.getIfdefCount(),
-					directiveCountAbsence.getIfdefCount(),
-					directiveCountPresence.getIfdefCount(),
+					directiveCountTotal.getIfdefCount(), directiveLoFTotal.getIfdefCount(),
+					directiveCountAbsence.getIfdefCount(), directiveLoFAbsence.getIfdefCount(),
+					directiveCountPresence.getIfdefCount(), directiveLoFPresence.getIfdefCount(),
 					0
 					));
-			logger.writeInfo(String.format("#ifndef [%6d/%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#ifndef [%6d|%6d/%6d|%6d/%6d|%6d/%6d|%6d]",
 					IfndefTree.count,
-					directiveCountTotal.getIfndefCount(),
-					directiveCountAbsence.getIfndefCount(),
-					directiveCountPresence.getIfndefCount(),
+					directiveCountTotal.getIfndefCount(), directiveLoFTotal.getIfndefCount(),
+					directiveCountAbsence.getIfndefCount(), directiveLoFAbsence.getIfndefCount(),
+					directiveCountPresence.getIfndefCount(), directiveLoFPresence.getIfndefCount(),
 					directiveCountAbsence.getIfndefCount()
 					));
-			logger.writeInfo(String.format("#elif   [%6d/%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#elif   [%6d|%6d/%6d|%6d/%6d|%6d/%6d|%6d]",
 					ElifTree.count,
-					directiveCountTotal.getElifCount(),
-					directiveCountAbsence.getElifCount(),
-					directiveCountPresence.getElifCount(),
+					directiveCountTotal.getElifCount(), directiveLoFTotal.getElifCount(),
+					directiveCountAbsence.getElifCount(), directiveLoFAbsence.getElifCount(),
+					directiveCountPresence.getElifCount(), directiveLoFPresence.getElifCount(),
 					directiveCountAbsence.getElifCount()
 					));
-			logger.writeInfo(String.format("#else   [%6d/%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#else   [%6d|%6d/%6d|%6d/%6d|%6d/%6d|%6d]",
 					ElseTree.count,
-					directiveCountTotal.getElseCount(),
-					directiveCountAbsence.getElseCount(),
-					directiveCountPresence.getElseCount(),
+					directiveCountTotal.getElseCount(), directiveLoFTotal.getElseCount(),
+					directiveCountAbsence.getElseCount(), directiveLoFAbsence.getElseCount(),
+					directiveCountPresence.getElseCount(), directiveLoFPresence.getElseCount(),
 					directiveCountTotal.getElseCount()
 					));
-			logger.writeInfo(String.format("#endif  [%6d\t\t  CC_sum=%6d]",
+			logger.writeInfo(String.format("#endif  [%6d%42s=%6d]",
 					endifCount,
+					"CC_sum",
 					directiveCountAbsence.getIfCount()
 					+ directiveCountAbsence.getIfndefCount()
 					+ directiveCountAbsence.getElifCount()
