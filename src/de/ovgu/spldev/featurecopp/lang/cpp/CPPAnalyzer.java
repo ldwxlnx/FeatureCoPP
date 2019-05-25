@@ -237,57 +237,74 @@ public final class CPPAnalyzer implements Processable {
 	public void showStatistics() {
 		if (logger != null) {
 			logger.writeInfo("Statistics:");
-			logger.writeInfo("Conditional directives (total/requested/simple absence/simple presence)");
+			logger.writeInfo("Conditional directives (total/requested/simple absence/simple presence/CC)");
 			FeatureTable.DirectiveCount directiveCountTotal = FeatureTable.countRequestedDirectives();
 			FeatureTable.DirectiveCount directiveCountAbsence = FeatureTable.countRequestedSimpleAbsenceDirectives();
 			FeatureTable.DirectiveCount directiveCountPresence = FeatureTable.countRequestedSimplePresenceDirectives();
-			logger.writeInfo(String.format("#if     [%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#if     [%6d/%6d/%6d/%6d/%6d]",
 					IfTree.count,
 					directiveCountTotal.getIfCount(),
 					directiveCountAbsence.getIfCount(),
-					directiveCountPresence.getIfCount()
+					directiveCountPresence.getIfCount(),
+					directiveCountAbsence.getIfCount()
 					));
-			logger.writeInfo(String.format("#ifdef  [%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#ifdef  [%6d/%6d/%6d/%6d/%6d]",
 					IfdefTree.count,
 					directiveCountTotal.getIfdefCount(),
 					directiveCountAbsence.getIfdefCount(),
-					directiveCountPresence.getIfdefCount()
+					directiveCountPresence.getIfdefCount(),
+					0
 					));
-			logger.writeInfo(String.format("#ifndef [%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#ifndef [%6d/%6d/%6d/%6d/%6d]",
 					IfndefTree.count,
 					directiveCountTotal.getIfndefCount(),
 					directiveCountAbsence.getIfndefCount(),
-					directiveCountPresence.getIfndefCount()
+					directiveCountPresence.getIfndefCount(),
+					directiveCountAbsence.getIfndefCount()
 					));
-			logger.writeInfo(String.format("#elif   [%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#elif   [%6d/%6d/%6d/%6d/%6d]",
 					ElifTree.count,
 					directiveCountTotal.getElifCount(),
 					directiveCountAbsence.getElifCount(),
-					directiveCountPresence.getElifCount()
+					directiveCountPresence.getElifCount(),
+					directiveCountAbsence.getElifCount()
 					));
-			logger.writeInfo(String.format("#else   [%6d/%6d/%6d/%6d]",
+			logger.writeInfo(String.format("#else   [%6d/%6d/%6d/%6d/%6d]",
 					ElseTree.count,
 					directiveCountTotal.getElseCount(),
 					directiveCountAbsence.getElseCount(),
-					directiveCountPresence.getElseCount()
+					directiveCountPresence.getElseCount(),
+					directiveCountTotal.getElseCount()
 					));
-			logger.writeInfo("#endif=" + endifCount);
+			logger.writeInfo(String.format("#endif  [%6d\t\t  CC_sum=%6d]",
+					endifCount,
+					directiveCountAbsence.getIfCount()
+					+ directiveCountAbsence.getIfndefCount()
+					+ directiveCountAbsence.getElifCount()
+					+ directiveCountTotal.getElseCount()));
 			logger.writeInfo(String.format("Opening/Closing [%d/%d]", endifCount, (IfTree.count + IfdefTree.count + IfndefTree.count)));
+			
+			// SCATTERING DEGREE
 			ObjMacroHistogram objMacroHistogram = ExpressionParser.getObjMacroHistogramProj();
-			logger.writeInfo("SD_OLD=" + objMacroHistogram.toString());
-			logger.writeInfo("SD_OLD_max=" + objMacroHistogram.getMostScatteredObjMacro());
-			logger.writeInfo("SD_OLD_total="+ objMacroHistogram.getTotalObjMacroCount());
+			logger.writeInfo(String.format("SD rank excl. #else=%s]", objMacroHistogram.toString()));
+			logger.writeInfo("Most scattered feature expression=" + objMacroHistogram.getMostScatteredObjMacro());
 			int sd_old_sum = objMacroHistogram.accumulateValues();
-			logger.writeInfo("SD_OLD_sum=" + sd_old_sum);
 			
 			ObjMacroHistogram objMacroHistogramInclElse = ExpressionParser.getObjMacroHistogramProjInclElse();
-			logger.writeInfo("SD_NEW=" + objMacroHistogramInclElse.toString());
-			logger.writeInfo("SD_NEW_max=" + objMacroHistogramInclElse.getMostScatteredObjMacro());
-			logger.writeInfo("SD_NEW_total="+ objMacroHistogramInclElse.getTotalObjMacroCount());
+			logger.writeInfo(String.format("SD rank incl. #else=%s", objMacroHistogramInclElse.toString()));
+			logger.writeInfo("Most scattered feature expression=" + objMacroHistogramInclElse.getMostScatteredObjMacro());
 			long sd_new_sum = objMacroHistogramInclElse.accumulateValues();
-			logger.writeInfo("SD_NEW_sum=" + sd_new_sum);
 			
-			logger.writeInfo("SD_missRatio=" + String.format(Locale.US, "%.3f", (1.0 - ((sd_old_sum * 1.0) / (sd_new_sum * 1.0)))));
+			logger.writeInfo(String.format(Locale.US, "SD sum excl. #else=[%6d]", sd_old_sum));
+			logger.writeInfo(String.format(Locale.US, "SD sum incl. #else=[%6d]", sd_new_sum));
+			logger.writeInfo(String.format(Locale.US, "SD missed:   delta=[%6d] (ratio=%.3f)", sd_new_sum - sd_old_sum, (1.0 - ((sd_old_sum * 1.0) / (sd_new_sum * 1.0)))));
+			// TANGLING DEGREE
+			long td_new_sum = FeatureTable.summarizeTanglingDegree(true);
+			long td_old_sum = FeatureTable.summarizeTanglingDegree(false);
+			logger.writeInfo(String.format(Locale.US, "TD sum excl. #else=[%6d]", td_old_sum));
+			logger.writeInfo(String.format(Locale.US, "TD sum incl. #else=[%6d]", td_new_sum));
+			logger.writeInfo(String.format(Locale.US, "TD missed    delta=[%6d] (ratio=%.3f)", td_new_sum - td_old_sum, (1.0 - ((td_old_sum * 1.0) / (td_new_sum * 1.0)))));
+			
 			logger.writeInfo(String.format(
 					"Processed text size (UTF-8): %d bytes (%03.3fMiB)",
 					textSize, textSize * 1.0 / (1024 * 1024)));

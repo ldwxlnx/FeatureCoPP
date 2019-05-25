@@ -139,6 +139,30 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	public boolean isSimplePresence() {
 		return featureExprAST.isSimplePresence();
 	}
+	/**
+	 * Summarizes tangling degree of all feature occurrences
+	 * @return summarized tangling degree of all feature occurrences
+	 */
+	public int getTanglingDegreeWithElse() {
+		int count = 0;
+		for(FeatureOccurrence fo : featureOccurrences) {
+			count += fo.getTDMap().getTotalObjMacroCount();
+		}
+		return count;
+	}
+	/**
+	 * Summarizes tangling degree of all non-else feature occurrences
+	 * @return summarized tangling degree of all non-else feature occurrences
+	 */
+	public int getTanglingDegreeWithoutElse() {
+		int count = 0;
+		for(FeatureOccurrence fo : featureOccurrences) {
+			if(!(fo.ftree instanceof ElseTree)) {
+				count += fo.getTDMap().getTotalObjMacroCount();
+			}
+		}
+		return count;
+	}
 
 	/**
 	 * Creates a FeatureModule for base file. This feature module differs from

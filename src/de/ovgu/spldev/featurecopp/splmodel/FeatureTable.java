@@ -111,32 +111,6 @@ public class FeatureTable {
 		}
 		return count;
 	}
-	/**
-	 * Counts all else directives in requested feature module 
-	 * @return
-	 */
-	public static long countElse() {
-		long count = 0;
-		for (FeatureModule m : featureTable.values()) {
-			if (m.isRequested()) {
-				count += m.numOfElse();
-			}
-		}
-		return count;
-	}
-	/**
-	 * Accumulate all simple absence conditions including #else directives
-	 * @return number of simple absence conditions
-	 */
-	public static long countSimpleAbsence() {
-		long count = 0;
-		for (FeatureModule m : featureTable.values()) {
-			if (m.isRequested() && m.isSimpleAbsence()) {
-				count++;
-			}
-		}
-		return count;
-	}
 	public static class DirectiveCount {
 		public long getIfCount() {
 			return ifCount;
@@ -214,6 +188,15 @@ public class FeatureTable {
 		return count;
 	}
 
+	public static long summarizeTanglingDegree(boolean withElse) {
+		long count = 0;
+		for (FeatureModule m : featureTable.values()) {
+			if (m.isRequested()) {
+				count += withElse ? m.getTanglingDegreeWithElse() : m.getTanglingDegreeWithoutElse();
+			}
+		}
+		return count;
+	}
 	/** FeatureTree.featureExpressionToString() => Feature */
 	private static HashMap<String, FeatureModule> featureTable = new HashMap<String, FeatureModule>();
 }
