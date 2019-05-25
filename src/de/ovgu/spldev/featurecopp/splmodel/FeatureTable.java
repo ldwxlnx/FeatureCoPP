@@ -1,13 +1,10 @@
 package de.ovgu.spldev.featurecopp.splmodel;
 
 import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
 
 import de.ovgu.spldev.featurecopp.config.Configuration;
 
@@ -200,12 +197,32 @@ public class FeatureTable {
 		}
 		return count;
 	}
+	public static class Pair<S,T> {
+		public String toString() {
+			return "{" + t + ":" + s + "}";
+		}
+		private S s;
+		private T t;
+	}
+	public static Pair<String, Integer> getTDMax(boolean inclElse) {
+		Pair<String, Integer> max = new Pair<>();
+		max.s = "";
+		max.t = 0;
+		for(FeatureModule fm : featureTable.values()) {
+			int td = fm.getTD();
+			if(max.t < td) {
+				max.t = td;
+				max.s = fm.featureTreeToString();
+			}
+		}
+		return max;
+	}
 
 	public static long summarizeTanglingDegree(boolean withElse) {
 		long count = 0;
 		for (FeatureModule m : featureTable.values()) {
 			if (m.isRequested()) {
-				count += withElse ? m.getTanglingDegreeWithElse() : m.getTanglingDegreeWithoutElse();
+				count += withElse ? m.sumTanglingDegreeWithElse() : m.sumTanglingDegreeWithoutElse();
 			}
 		}
 		return count;

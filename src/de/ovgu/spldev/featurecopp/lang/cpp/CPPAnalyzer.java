@@ -309,7 +309,9 @@ public final class CPPAnalyzer implements Processable {
 			long td_new_sum = FeatureTable.summarizeTanglingDegree(true);
 			long td_old_sum = FeatureTable.summarizeTanglingDegree(false);
 			logger.writeInfo(String.format(Locale.US, "TD sum excl. #else=[%6d]", td_old_sum));
+			logger.writeInfo(String.format("Most tangled feature expression=%s", FeatureTable.getTDMax(false)));
 			logger.writeInfo(String.format(Locale.US, "TD sum incl. #else=[%6d]", td_new_sum));
+			logger.writeInfo(String.format("Most tangled feature expression=%s", FeatureTable.getTDMax(true)));
 			logger.writeInfo(String.format(Locale.US, "TD missed    delta=[%6d] (ratio=%.3f)", td_new_sum - td_old_sum, (1.0 - ((td_old_sum * 1.0) / (td_new_sum * 1.0)))));
 			
 			logger.writeInfo(String.format(
