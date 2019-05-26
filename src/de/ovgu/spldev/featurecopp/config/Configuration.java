@@ -285,6 +285,7 @@ public class Configuration {
 	private static final String LOGFILE_PREFIX = APPLICATION_NAME;
 	private static final String LOGFILE_SUFFIX = "log";
 	private static final int LOGROTATE_N = 3;
+	public static final int LOGFILE_SD_TOP_N = 5;
 	/* XML REPORT */
 	public static final String XML_REPORT_FILE = APPLICATION_NAME
 			+ "_report.xml";

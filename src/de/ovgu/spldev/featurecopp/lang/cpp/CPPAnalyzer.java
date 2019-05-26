@@ -295,13 +295,15 @@ public final class CPPAnalyzer implements Processable {
 			// SCATTERING DEGREE
 			logger.writeInfo("Scattering Degree (SD):");
 			ObjMacroHistogram objMacroHistogram = ExpressionParser.getObjMacroHistogramProj();
-			logger.writeInfo(String.format("SD rank excl. #else=%s]", objMacroHistogram.toString()));
-			logger.writeInfo("Most scattered feature expression=" + objMacroHistogram.getMostScatteredObjMacro());
+			logger.writeInfo(String.format("SD top %d rank excl. #else=%s",
+					Configuration.LOGFILE_SD_TOP_N, objMacroHistogram.topNtoString(Configuration.LOGFILE_SD_TOP_N)));
+			logger.writeInfo("Most scattered feature expression: " + objMacroHistogram.getMostScatteredObjMacro());
 			int sd_old_sum = objMacroHistogram.accumulateValues();
 			
 			ObjMacroHistogram objMacroHistogramInclElse = ExpressionParser.getObjMacroHistogramProjInclElse();
-			logger.writeInfo(String.format("SD rank incl. #else=%s", objMacroHistogramInclElse.toString()));
-			logger.writeInfo("Most scattered feature expression=" + objMacroHistogramInclElse.getMostScatteredObjMacro());
+			logger.writeInfo(String.format("SD top %d rank incl. #else=%s",
+					Configuration.LOGFILE_SD_TOP_N, objMacroHistogramInclElse.topNtoString(Configuration.LOGFILE_SD_TOP_N)));	
+			logger.writeInfo("Most scattered feature expression: " + objMacroHistogramInclElse.getMostScatteredObjMacro());
 			long sd_new_sum = objMacroHistogramInclElse.accumulateValues();
 			
 			logger.writeInfo(String.format(Locale.US, "SD sum excl. #else=[%6d]", sd_old_sum));

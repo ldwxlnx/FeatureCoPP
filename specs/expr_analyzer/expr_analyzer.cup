@@ -52,6 +52,13 @@ parser code {:
 		public String toString() {
 			return sortDesc().toString();
 		}
+		public String topNtoString(int n) {
+			if(n < 1) {
+				n = 1;
+			}
+			return sortDesc().entrySet().stream().limit(n)
+			  .collect(Collectors.toList()).toString();
+		}
 		public boolean contains(Pattern pattern) {
 			for(String key : objMacroHistogram.keySet()) {
 				// first found is sufficient
