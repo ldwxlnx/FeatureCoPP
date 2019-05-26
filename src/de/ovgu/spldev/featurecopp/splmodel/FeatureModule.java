@@ -126,6 +126,30 @@ public class FeatureModule implements Comparable<FeatureModule> {
 		return count;
 	}
 	/**
+	 * Returns keyword (e.g., #if) from associated feature tree.
+	 * Further roles in feature may have different keywords in their feature trees.
+	 * @return keyword of feature associated tree
+	 */
+	public String getKeywordFromFeatureTree() {
+		return featureExprAST.getKeyword();
+	}
+	
+	public String getFilenameAt(int roleIdx) {
+		// invalid index
+		if(roleIdx < 0 || featureOccurrences.size() <= roleIdx) {
+			return null;
+		}
+		FeatureOccurrence roleAt = featureOccurrences.get(roleIdx); 
+		return roleAt.filename + "[lines: " + roleAt.lineStart + "-" + roleAt.lineEnd + "]";
+	}
+	/**
+	 * Indicates if feature was introduced by #else directive
+	 * @return true if introduced by #else directive, false otherwise
+	 */
+	public boolean isElse() {
+		return featureExprAST instanceof ElseTree;
+	}
+	/**
 	 * Indicates whether feature relies on simple absence condition
 	 * @return true, if simple absence condition, false otherwise
 	 */

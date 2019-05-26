@@ -197,32 +197,40 @@ public class FeatureTable {
 		}
 		return count;
 	}
-	public static class Pair<S,T> {
-		public String toString() {
-			return "{" + t + ":" + s + "}";
-		}
-		private S s;
-		private T t;
+	public static class Quadruple<S,T,U,V> {
+		public S s;
+		public T t;
+		public U u;
+		public V v;
 	}
-	public static Pair<String, Integer> getTDMax(boolean inclElse) {
-		Pair<String, Integer> max = new Pair<>();
-		max.s = "";
-		max.t = 0;
+	public static Quadruple<String, String, String, Integer> getTDMax(boolean inclElse) {
+		Quadruple<String, String, String, Integer> max = new Quadruple<>();
+		max.s = max.t = max.u =  "";
+		max.v = 0;
 		for(FeatureModule fm : featureTable.values()) {
+			// skip #else features introduced by #else directives:
+			// if a feature is not exclusively introduced by #else
+			// its TD cannot be larger than of regular directives
+			if(! inclElse && fm.isElse() || !fm.isRequested()) {
+				continue;
+			}
 			int td = fm.getTD();
-			if(max.t < td) {
-				max.t = td;
+			if(max.v < td) {
 				max.s = fm.featureTreeToString();
+				max.t = fm.getKeywordFromFeatureTree();
+				// take first file as example occurrence (role)
+				max.u = fm.getFilenameAt(0);
+				max.v = td;
 			}
 		}
 		return max;
 	}
 
-	public static long summarizeTanglingDegree(boolean withElse) {
+	public static long summarizeTanglingDegree(boolean inclElse) {
 		long count = 0;
 		for (FeatureModule m : featureTable.values()) {
 			if (m.isRequested()) {
-				count += withElse ? m.sumTanglingDegreeWithElse() : m.sumTanglingDegreeWithoutElse();
+				count += inclElse ? m.sumTanglingDegreeWithElse() : m.sumTanglingDegreeWithoutElse();
 			}
 		}
 		return count;

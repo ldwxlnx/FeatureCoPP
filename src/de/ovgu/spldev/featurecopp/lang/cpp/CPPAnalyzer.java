@@ -20,6 +20,7 @@ import de.ovgu.spldev.featurecopp.log.Logger;
 import de.ovgu.spldev.featurecopp.splmodel.ElifTree;
 import de.ovgu.spldev.featurecopp.splmodel.ElseTree;
 import de.ovgu.spldev.featurecopp.splmodel.FeatureTable;
+import de.ovgu.spldev.featurecopp.splmodel.FeatureTable.Quadruple;
 import de.ovgu.spldev.featurecopp.splmodel.IfTree;
 import de.ovgu.spldev.featurecopp.splmodel.IfdefTree;
 import de.ovgu.spldev.featurecopp.splmodel.IfndefTree;
@@ -292,6 +293,7 @@ public final class CPPAnalyzer implements Processable {
 			logger.writeInfo(String.format("Opening/Closing [%d/%d]", endifCount, (IfTree.count + IfdefTree.count + IfndefTree.count)));
 			
 			// SCATTERING DEGREE
+			logger.writeInfo("Scattering Degree (SD):");
 			ObjMacroHistogram objMacroHistogram = ExpressionParser.getObjMacroHistogramProj();
 			logger.writeInfo(String.format("SD rank excl. #else=%s]", objMacroHistogram.toString()));
 			logger.writeInfo("Most scattered feature expression=" + objMacroHistogram.getMostScatteredObjMacro());
@@ -308,10 +310,17 @@ public final class CPPAnalyzer implements Processable {
 			// TANGLING DEGREE
 			long td_new_sum = FeatureTable.summarizeTanglingDegree(true);
 			long td_old_sum = FeatureTable.summarizeTanglingDegree(false);
+			logger.writeInfo("Tangling Degree (TD):");
 			logger.writeInfo(String.format(Locale.US, "TD sum excl. #else=[%6d]", td_old_sum));
-			logger.writeInfo(String.format("Most tangled feature expression=%s", FeatureTable.getTDMax(false)));
+			Quadruple<String, String, String, Integer> tdMaxExcl = FeatureTable.getTDMax(false);
+			Quadruple<String, String, String, Integer> tdMaxIncl = FeatureTable.getTDMax(true);
+			logger.writeInfo(String.format("Most tangled feature expression=%s", tdMaxExcl.s));
+			logger.writeInfo(String.format("Keyword=%s, TD=%d", tdMaxExcl.t, tdMaxExcl.v));
+			logger.writeInfo(String.format("e.g., in file=%s", tdMaxExcl.u));
 			logger.writeInfo(String.format(Locale.US, "TD sum incl. #else=[%6d]", td_new_sum));
-			logger.writeInfo(String.format("Most tangled feature expression=%s", FeatureTable.getTDMax(true)));
+			logger.writeInfo(String.format("Most tangled feature expression=%s", tdMaxIncl.s));
+			logger.writeInfo(String.format("Keyword=%s, TD=%d", tdMaxIncl.t, tdMaxIncl.v));
+			logger.writeInfo(String.format("e.g., in file=%s", tdMaxIncl.u));
 			logger.writeInfo(String.format(Locale.US, "TD missed    delta=[%6d] (ratio=%.3f)", td_new_sum - td_old_sum, (1.0 - ((td_old_sum * 1.0) / (td_new_sum * 1.0)))));
 			
 			logger.writeInfo(String.format(
