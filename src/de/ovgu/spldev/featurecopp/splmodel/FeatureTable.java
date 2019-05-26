@@ -16,6 +16,14 @@ import de.ovgu.spldev.featurecopp.config.Configuration;
  */
 public class FeatureTable {
 	/**
+	 * Repeated program invocations in batch mode required re-initialization of feature map (per run).
+	 */
+	public static void reinit() {
+		featureTable.clear();
+		featureTable = null;
+		featureTable = new HashMap<String, FeatureModule>();
+	}
+	/**
 	 * Returns a feature corresponding to given feature tree. If none such
 	 * feature exists, a new one is created and delivered to the caller. Key for
 	 * feature retrieval is indirectly FeatureTree.toString()

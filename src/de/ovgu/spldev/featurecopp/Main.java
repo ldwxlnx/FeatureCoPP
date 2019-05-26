@@ -255,6 +255,7 @@ public class Main {
 						break;
 					}
 					modeFunction.apply(userConf);
+					FeatureTable.reinit();
 				}
 			});
 		}
