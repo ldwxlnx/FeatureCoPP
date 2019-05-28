@@ -86,7 +86,7 @@ Project's structure is pretty much standard:
 5. `specs` - JFlex and JCup lexer and parser specification files
 6. `test_dos` - Test input having `\r\n` line terminators
 7. `test_unix` - Test input having `\n` line terminators
-8. `conf.d` - configuration directory (currently only `blacklist.conf` for excluding files, which cannot be processed by FeatureCoPP)
+8. `conf.d` - configuration directory (multiple example configuration files for batch processing FeatureCoPP)
 9. `blacklist_examples` - example files which are refused by FeatureCoPP
 
 We strongly recommend to setup different run configurations for each mode and test project (cf. [Usage](#usage)).
