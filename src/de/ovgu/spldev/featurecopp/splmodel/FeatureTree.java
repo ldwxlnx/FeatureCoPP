@@ -70,7 +70,8 @@ public class FeatureTree {
 				 && (root.right instanceof Macro || root.right instanceof Defined);
 	 }
 	 public boolean isSimplePresence() {
-		 return root instanceof Macro || root instanceof Defined;
+		 return root.left == null
+				 && (root instanceof Macro || root instanceof Defined);
 	 }
 
 	/**

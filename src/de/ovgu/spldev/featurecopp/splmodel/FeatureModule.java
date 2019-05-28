@@ -92,7 +92,7 @@ public class FeatureModule implements Comparable<FeatureModule> {
 	 */
 	public long numOfIfndef(boolean useLoF) {
 		long count = 0;
-		for(FeatureOccurrence fo : featureOccurrences) {
+		for(FeatureOccurrence fo : featureOccurrences) {			
 			if(fo.ftree instanceof IfndefTree) {
 				count += useLoF ? (fo.lineEnd - fo.lineStart) + 1 : 1;
 			}
