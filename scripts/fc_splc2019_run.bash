@@ -11,19 +11,22 @@ LOGPATTERN="FeatureCoPP_splc2019_*.0.log";
 LOGFILE_COMBINED="SPLC__LOGFILE_COMBINED.LOG";
 # speed things a little up on github;-)
 WGET_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:67.0) Gecko/20100101 Firefox/67.0';
+# expected bash minor due to special functionality
+typeset -i EXP_BASH_MINOR=3;
+# expected bash major due to special functionality
+typeset -i EXP_BASH_MAJOR=4;
 # expected java major due to FeatureCoPP functionality
 typeset -i EXP_JAVA_VERSION=8;
 # testbed directory
+#PROJECT_DIR="${HOME}/Downloads/SPLC2019DATA";
 PROJECT_DIR=$(pwd);
 # involved binaries
 declare -a REQ_BINARIES=(
     #asdfg # error test
     java
     bash
-    grep
     sed
     awk
-    cut
     find 
     wget
     tar
@@ -36,7 +39,8 @@ declare -a REQ_BINARIES=(
 # add further here
 );
 # used analysis tool
-FEATURECOPP_RUN="java -jar FeatureCoPP/FeatureCoPP.jar --config=FeatureCoPP/conf.d/fc_splc2019artifactContrib.conf";
+FEATURECOPP_APP="java -jar FeatureCoPP/FeatureCoPP.jar";
+FEATURECOPP_TB_CONF="--config=FeatureCoPP/conf.d/fc_splc2019artifactContrib.conf";
 
 # used test systems
 declare -A SPLC2019_SYSTEM_URLS=(
@@ -63,7 +67,9 @@ declare -A SPLC2019_SYSTEM_URLS=(
 
 
 function usage() {
-    echo "$(basename $0) splc | [config] | purge";
+    echo "$(basename $0) splc | purge";
+    echo "splc:  Re-creates splc2019 case study testbed, including download, extraction and analysis of test systems.";
+    echo "purge: Deletes all downloaded archives, created folders, and logfiles."; 
 }
 
 function purgeProjDir() {
@@ -72,7 +78,6 @@ function purgeProjDir() {
 }
 
 function testBashVersion() {
-    # 4.4.12(3)-release
     if (( ${BASH_VERSION%%.*} < 4 )); then
 	echo "Bash version >= 4.x required (found: ${BASH_VERSION})! Refusing ...";
 	exit 1;
@@ -115,8 +120,8 @@ function extractArchive() {
 function downloadSystems() {
     # associative passed by name ref
     local -n urls=$1;
-    typeset -i numOfSystems=${#urls[@]};
-    typeset -i count=0;
+    declare -i numOfSystems=${#urls[@]};
+    declare -i count=0;
     for key in "${!urls[@]}";
     do
 	#echo "$key -> ${urls[$key]}";
@@ -179,11 +184,15 @@ case $1 in
 	cd $PROJECT_DIR;
 	downloadSystems SPLC2019_SYSTEM_URLS;
 	### processing
-	runProgram "$FEATURECOPP_RUN";
+	runProgram "$FEATURECOPP_APP $FEATURECOPP_TB_CONF";
 	### after processing
 	concatLogs "$PROJECT_DIR" "$LOGPATTERN" "$LOGFILE_COMBINED"
 	;;
     *)
-	echo "Using configuration $1 ...";
+	echo "Unexpected argument ($1)! Refusing...";
+	usage;
+	exit 1;
 	;;
 esac
+
+
